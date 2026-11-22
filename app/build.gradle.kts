@@ -32,7 +32,8 @@ android {
     buildFeatures { compose = true }
 }
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
+    // Compose 1.9.x remains compatible with AGP 8.13 and compileSdk 36.
+    val composeBom = platform("androidx.compose:compose-bom:2025.10.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.core:core-ktx:1.17.0")
