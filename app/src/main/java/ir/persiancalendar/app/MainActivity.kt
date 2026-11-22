@@ -213,7 +213,8 @@ private fun DateConverter(accent: Color) {
                 Button(onClick={
                     val y=num(jy); val m=num(jm); val d=num(jd)
                     result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
-                        val c=persianCalendar(); c.clear(); c.set(y,m-1,d)
+                        val c=persianCalendar(); c.isLenient=false; c.clear(); c.set(y,m-1,d)
+                        c.timeInMillis // Force strict calendar validation before formatting.
                         SimpleDateFormat("yyyy/MM/dd",Locale.US).format(c.time)
                     }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
                 }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به میلادی")}
@@ -228,7 +229,8 @@ private fun DateConverter(accent: Color) {
                 Button(onClick={
                     val y=num(gy); val m=num(gm); val d=num(gd)
                     result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
-                        val c=GregorianCalendar(y,m-1,d); val p=persianCalendar(); p.timeInMillis=c.timeInMillis
+                        val c=GregorianCalendar(); c.isLenient=false; c.clear(); c.set(y,m-1,d); c.timeInMillis
+                        val p=persianCalendar(); p.timeInMillis=c.timeInMillis
                         faNumber(p.get(Calendar.YEAR))+"/"+faNumber(p.get(Calendar.MONTH)+1)+"/"+faNumber(p.get(Calendar.DAY_OF_MONTH))
                     }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
                 }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به شمسی")}
