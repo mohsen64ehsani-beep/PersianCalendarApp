@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.icu.util.Calendar
 import android.icu.util.ULocale
 import java.util.Locale
-import java.util.TimeZone
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -77,7 +76,7 @@ private fun PersianCalendarApp() {
 @Composable
 private fun CalendarHome() {
     val today = remember {
-        Calendar.getInstance(TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply {
+        Calendar.getInstance(android.icu.util.TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply {
             timeInMillis = System.currentTimeMillis()
         }
     }
@@ -85,8 +84,10 @@ private fun CalendarHome() {
     val month = today.get(Calendar.MONTH)
     val day = today.get(Calendar.DAY_OF_MONTH)
     val firstDay = remember(year, month) {
-        (today.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }
-            .get(Calendar.DAY_OF_WEEK)
+        Calendar.getInstance(android.icu.util.TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply {
+            timeInMillis = today.timeInMillis
+            set(Calendar.DAY_OF_MONTH, 1)
+        }.get(Calendar.DAY_OF_WEEK)
     }
     val monthLength = today.getActualMaximum(Calendar.DAY_OF_MONTH)
     val offset = firstDay % 7
