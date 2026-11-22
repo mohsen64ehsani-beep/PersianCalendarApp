@@ -111,6 +111,17 @@ private fun CalendarHome(accent: Color) {
     val monthLength = monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     val offset = firstDay % 7 // ICU: Sunday=1; Persian calendar grid starts Saturday.
     val cells = (0 until offset).map { 0 } + (1..monthLength).toList()
+    val selectedGregorian = remember(visibleYear, visibleMonth, selectedDay) {
+        runCatching {
+            val selected = persianCalendar().apply {
+                isLenient = false
+                set(Calendar.YEAR, visibleYear)
+                set(Calendar.MONTH, visibleMonth)
+                set(Calendar.DAY_OF_MONTH, selectedDay.coerceIn(1, monthLength))
+            }
+            SimpleDateFormat("EEEE، d MMMM yyyy", Locale("fa", "IR")).format(selected.time)
+        }.getOrDefault("")
+    }
 
     fun moveMonth(amount: Int) {
         val moved = persianCalendar().apply {
@@ -139,7 +150,10 @@ private fun CalendarHome(accent: Color) {
             Column(Modifier.padding(horizontal = 17.dp, vertical = 14.dp)) {
                 Text(if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) "امروز" else "تاریخ انتخاب‌شده", color = Muted, fontSize = 13.sp)
                 Text(faNumber(selectedDay) + " " + MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                Text("بر اساس ساعت رسمی ایران", color = Muted, fontSize = 12.sp)
+                Text(selectedGregorian, color = Muted, fontSize = 12.sp)
+                if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) {
+                    Text("امروز · ساعت رسمی ایران", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
         Spacer(Modifier.height(14.dp))
@@ -153,14 +167,17 @@ private fun CalendarHome(accent: Color) {
         }
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth()) {
-            WeekDays.forEach { name ->
-                Text(name.take(1), Modifier.weight(1f), textAlign = TextAlign.Center, color = Muted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            listOf("ش", "ی", "د", "س", "چ", "پ", "ج").forEachIndexed { index, label ->
+                Text(label, Modifier.weight(1f), textAlign = TextAlign.Center,
+                    color = if (index == 6) Color(0xFFD45D68) else Muted,
+                    fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(Modifier.height(6.dp))
         LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.fillMaxWidth(), userScrollEnabled = false) {
             items(cells) { value ->
                 val isSelected = value != 0 && value == selectedDay
+                val isToday = value != 0 && visibleYear == todayYear && visibleMonth == todayMonth && value == todayDay
                 Box(
                     Modifier.fillMaxWidth().padding(2.dp).aspectRatio(0.94f).then(
                         if (isSelected) Modifier.background(accent, CircleShape) else Modifier
@@ -168,12 +185,15 @@ private fun CalendarHome(accent: Color) {
                     contentAlignment = Alignment.Center
                 ) {
                     if (value != 0) {
-                        Text(
-                            faNumber(value),
-                            color = if (isSelected) Color.White else Ink,
-                            fontSize = 18.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                            Text(faNumber(value),
+                                color = when { isSelected -> Color.White; isToday -> accent; else -> Ink },
+                                fontSize = 17.sp,
+                                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium)
+                            if (isToday && !isSelected) {
+                                Box(Modifier.padding(top = 1.dp).size(4.dp).background(accent, CircleShape))
+                            }
+                        }
                     }
                 }
             }
