@@ -1,4 +1,4 @@
-name: Android CI
+name: Android Release Build
 on:
   push:
     branches: [ main ]
@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 jobs:
-  build:
+  build-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,11 +28,11 @@ jobs:
           packages: platform-tools
       - name: Install Android platform
         run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
-      - name: Build debug APK
-        run: gradle :app:assembleDebug --stacktrace
-      - name: Upload debug APK
+      - name: Build release APK
+        run: gradle :app:assembleRelease --stacktrace
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: persian-calendar-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: persian-calendar-release-unsigned
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
