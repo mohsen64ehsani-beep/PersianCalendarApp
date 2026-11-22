@@ -1,7 +1,8 @@
 package ir.persiancalendar.app
 
 import android.os.Bundle
-import android.icu.util.PersianCalendar
+import android.icu.util.Calendar
+import android.icu.util.ULocale
 import java.util.Locale
 import java.util.TimeZone
 import androidx.activity.ComponentActivity
@@ -76,18 +77,18 @@ private fun PersianCalendarApp() {
 @Composable
 private fun CalendarHome() {
     val today = remember {
-        PersianCalendar(TimeZone.getTimeZone("Asia/Tehran"), Locale("fa", "IR")).apply {
+        Calendar.getInstance(TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply {
             timeInMillis = System.currentTimeMillis()
         }
     }
-    val year = today.get(PersianCalendar.YEAR)
-    val month = today.get(PersianCalendar.MONTH)
-    val day = today.get(PersianCalendar.DAY_OF_MONTH)
+    val year = today.get(Calendar.YEAR)
+    val month = today.get(Calendar.MONTH)
+    val day = today.get(Calendar.DAY_OF_MONTH)
     val firstDay = remember(year, month) {
-        (today.clone() as PersianCalendar).apply { set(PersianCalendar.DAY_OF_MONTH, 1) }
-            .get(PersianCalendar.DAY_OF_WEEK)
+        (today.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }
+            .get(Calendar.DAY_OF_WEEK)
     }
-    val monthLength = today.getActualMaximum(PersianCalendar.DAY_OF_MONTH)
+    val monthLength = today.getActualMaximum(Calendar.DAY_OF_MONTH)
     val offset = firstDay % 7
     val cells = (0 until offset).map { 0 } + (1..monthLength).toList()
 
