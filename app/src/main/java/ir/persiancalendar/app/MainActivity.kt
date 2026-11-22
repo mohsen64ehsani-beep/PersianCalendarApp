@@ -16,9 +16,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -197,28 +194,40 @@ private fun CalendarHome(accent: Color) {
             }
         }
         Spacer(Modifier.height(6.dp))
-        LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.fillMaxWidth(), userScrollEnabled = false) {
-            items(cells) { value ->
-                val isSelected = value != 0 && value == selectedDay
-                val isToday = value != 0 && visibleYear == todayYear && visibleMonth == todayMonth && value == todayDay
-                val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
-                Box(
-                    Modifier.fillMaxWidth().padding(2.dp).aspectRatio(0.94f).then(
-                        if (isSelected) Modifier.background(accent, CircleShape) else Modifier
-                    ).clickable(enabled = value != 0) { selectedDay = value },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (value != 0) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Text(faNumber(value),
-                                color = when { isSelected -> Color.White; isToday -> accent; isHoliday -> Color(0xFFD45D68); else -> Ink },
-                                fontSize = 17.sp,
-                                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium)
-                            if ((isToday || isHoliday) && !isSelected) {
-                                Box(Modifier.padding(top = 1.dp).size(4.dp).background(if (isToday) accent else Color(0xFFD45D68), CircleShape))
+        cells.chunked(7).forEach { week ->
+            Row(Modifier.fillMaxWidth()) {
+                week.forEach { value ->
+                    val isSelected = value != 0 && value == selectedDay
+                    val isToday = value != 0 && visibleYear == todayYear && visibleMonth == todayMonth && value == todayDay
+                    val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
+                    Box(
+                        Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f).then(
+                            if (isSelected) Modifier.background(accent, CircleShape) else Modifier
+                        ).clickable(enabled = value != 0) { selectedDay = value },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (value != 0) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                Text(
+                                    faNumber(value),
+                                    color = when {
+                                        isSelected -> Color.White
+                                        isToday -> accent
+                                        isHoliday -> Color(0xFFD45D68)
+                                        else -> Ink
+                                    },
+                                    fontSize = 17.sp,
+                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium
+                                )
+                                if ((isToday || isHoliday) && !isSelected) {
+                                    Box(Modifier.padding(top = 1.dp).size(4.dp).background(if (isToday) accent else Color(0xFFD45D68), CircleShape))
+                                }
                             }
                         }
                     }
+                }
+                repeat(7 - week.size) {
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
