@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -58,8 +59,9 @@ private fun persianCalendar(): Calendar =
 
 @Composable
 private fun PersianCalendarApp() {
+    val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
-    var themeIndex by remember { mutableIntStateOf(0) }
+    var themeIndex by remember { mutableIntStateOf(context.getSharedPreferences("daynegar", 0).getInt("theme", 0).coerceIn(0, 4)) }
     val accent = listOf(Purple, Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))[themeIndex]
     MaterialTheme {
         Scaffold(
@@ -75,10 +77,10 @@ private fun PersianCalendarApp() {
         ) { padding ->
             Surface(Modifier.fillMaxSize().padding(padding), color = CanvasColor) {
                 when (selectedTab) {
-                    0 -> CalendarHome()
+                    0 -> CalendarHome(accent)
                     1 -> DateConverter(accent)
                     2 -> IranClockPage()
-                    else -> SettingsPage(themeIndex, { themeIndex = it }, accent)
+                    else -> SettingsPage(themeIndex, { themeIndex = it; context.getSharedPreferences("daynegar", 0).edit().putInt("theme", it).apply() }, accent)
                 }
             }
         }
@@ -86,7 +88,7 @@ private fun PersianCalendarApp() {
 }
 
 @Composable
-private fun CalendarHome() {
+private fun CalendarHome(accent: Color) {
     val today = remember {
         persianCalendar().apply { timeInMillis = System.currentTimeMillis() }
     }
@@ -129,7 +131,7 @@ private fun CalendarHome() {
                 Text("تقویم فارسی و زمان ایران", color = Muted, fontSize = 13.sp)
             }
             Box(Modifier.size(46.dp).background(Purple.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.CalendarMonth, null, tint = Purple)
+                Icon(Icons.Default.CalendarMonth, null, tint = accent)
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -161,7 +163,7 @@ private fun CalendarHome() {
                 val isSelected = value != 0 && value == selectedDay
                 Box(
                     Modifier.fillMaxWidth().padding(2.dp).aspectRatio(0.94f).then(
-                        if (isSelected) Modifier.background(Purple, CircleShape) else Modifier
+                        if (isSelected) Modifier.background(accent, CircleShape) else Modifier
                     ).clickable(enabled = value != 0) { selectedDay = value },
                     contentAlignment = Alignment.Center
                 ) {
@@ -182,7 +184,7 @@ private fun CalendarHome() {
                 visibleYear = todayYear
                 visibleMonth = todayMonth
                 selectedDay = todayDay
-            }) { Text("بازگشت به امروز", color = Purple, fontSize = 14.sp) }
+            }) { Text("بازگشت به امروز", color = accent, fontSize = 14.sp) }
         }
         Spacer(Modifier.height(4.dp))
         Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
