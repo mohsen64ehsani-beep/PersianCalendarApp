@@ -91,8 +91,16 @@ private fun PersianCalendarApp() {
 
 @Composable
 private fun CalendarHome(accent: Color) {
-    val today = remember {
-        persianCalendar().apply { timeInMillis = System.currentTimeMillis() }
+    val context = LocalContext.current
+    var todayTick by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(60_000)
+            todayTick = System.currentTimeMillis()
+        }
+    }
+    val today = remember(todayTick) {
+        persianCalendar().apply { timeInMillis = todayTick }
     }
     val todayYear = today.get(Calendar.YEAR)
     val todayMonth = today.get(Calendar.MONTH)
