@@ -88,7 +88,7 @@ private fun CalendarHome() {
             .get(PersianCalendar.DAY_OF_WEEK)
     }
     val monthLength = today.getActualMaximum(PersianCalendar.DAY_OF_MONTH)
-    val offset = (firstDay + 5) % 7
+    val offset = firstDay % 7
     val cells = (0 until offset).map { 0 } + (1..monthLength).toList()
 
     Column(Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 16.dp)) {
