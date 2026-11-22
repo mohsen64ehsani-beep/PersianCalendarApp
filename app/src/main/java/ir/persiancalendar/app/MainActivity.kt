@@ -13,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -111,6 +112,14 @@ private fun CalendarHome(accent: Color) {
     val monthLength = monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     val offset = firstDay % 7 // ICU: Sunday=1; Persian calendar grid starts Saturday.
     val cells = (0 until offset).map { 0 } + (1..monthLength).toList()
+    val eventKey = "$visibleYear-$visibleMonth-$selectedDay"
+    val prefs = remember { context.getSharedPreferences("daynegar", 0) }
+    var events by remember(eventKey) {
+        mutableStateOf(prefs.getStringSet("events_$eventKey", emptySet())?.toList()?.sorted() ?: emptyList())
+    }
+    var showAddEvent by remember { mutableStateOf(false) }
+    var eventTitle by remember { mutableStateOf("") }
+
     val selectedGregorian = remember(visibleYear, visibleMonth, selectedDay) {
         runCatching {
             val selected = persianCalendar().apply {
@@ -135,7 +144,7 @@ private fun CalendarHome(accent: Color) {
         selectedDay = 1
     }
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
                 Text("تقویم روزنگار", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -207,10 +216,53 @@ private fun CalendarHome(accent: Color) {
             }) { Text("بازگشت به امروز", color = accent, fontSize = 14.sp) }
         }
         Spacer(Modifier.height(4.dp))
-        Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(7.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            TextButton(onClick = { eventTitle = ""; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
+        }
         Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
-            Text("هنوز رویدادی برای این روز ثبت نشده است.", Modifier.padding(16.dp).fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
+            if (events.isEmpty()) {
+                Text("برای این روز رویدادی ثبت نشده است.", Modifier.padding(16.dp).fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
+            } else {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp)) {
+                    events.forEach { event ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("•", color = accent, fontSize = 20.sp)
+                            Text(event, Modifier.weight(1f).padding(start = 8.dp), color = Ink, fontSize = 14.sp)
+                            Text("حذف", color = Color(0xFFD45D68), fontSize = 12.sp,
+                                modifier = Modifier.clickable {
+                                    events = events - event
+                                    prefs.edit().putStringSet("events_$eventKey", events.toSet()).apply()
+                                }.padding(6.dp))
+                        }
+                    }
+                }
+            }
+        }
+        if (showAddEvent) {
+            AlertDialog(
+                onDismissRequest = { showAddEvent = false },
+                title = { Text("رویداد جدید") },
+                text = {
+                    OutlinedTextField(
+                        value = eventTitle,
+                        onValueChange = { eventTitle = it.take(80) },
+                        label = { Text("عنوان رویداد") },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val title = eventTitle.trim()
+                        if (title.isNotEmpty()) {
+                            events = (events + title).distinct()
+                            prefs.edit().putStringSet("events_$eventKey", events.toSet()).apply()
+                            showAddEvent = false
+                        }
+                    }) { Text("ذخیره") }
+                },
+                dismissButton = { TextButton(onClick = { showAddEvent = false }) { Text("انصراف") } }
+            )
         }
     }
 }
