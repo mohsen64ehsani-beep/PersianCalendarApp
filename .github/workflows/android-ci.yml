@@ -31,11 +31,45 @@ jobs:
           packages: platform-tools
       - name: Install Android platform
         run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
-      - name: Build release APK
+      - name: Restore release signing key
+        if: github.event_name != 'pull_request'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || { echo "Missing ANDROID_KEYSTORE_BASE64 repository secret"; exit 1; }
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || { echo "Missing ANDROID_KEYSTORE_PASSWORD repository secret"; exit 1; }
+          test -n "$ANDROID_KEY_ALIAS" || { echo "Missing ANDROID_KEY_ALIAS repository secret"; exit 1; }
+          test -n "$ANDROID_KEY_PASSWORD" || { echo "Missing ANDROID_KEY_PASSWORD repository secret"; exit 1; }
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/daynegar-release.jks"
+          test -s "$RUNNER_TEMP/daynegar-release.jks"
+      - name: Build signed release APK
+        if: github.event_name != 'pull_request'
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/daynegar-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle :app:assembleRelease --stacktrace
-      - name: Upload release APK
+      - name: Build debug APK for pull requests
+        if: github.event_name == 'pull_request'
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Verify release signature
+        if: github.event_name != 'pull_request'
+        run: apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
+      - name: Upload signed release APK
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: persian-calendar-release-unsigned
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          name: daynegar-release-signed
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+      - name: Upload debug APK
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: daynegar-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
