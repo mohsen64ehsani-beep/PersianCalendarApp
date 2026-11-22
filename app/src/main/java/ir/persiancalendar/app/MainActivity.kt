@@ -3,6 +3,11 @@ package ir.persiancalendar.app
 import android.os.Bundle
 import android.icu.util.Calendar
 import android.icu.util.ULocale
+import android.icu.util.GregorianCalendar
+import java.text.SimpleDateFormat
+import java.util.Locale
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -54,6 +59,8 @@ private fun persianCalendar(): Calendar =
 @Composable
 private fun PersianCalendarApp() {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var themeIndex by remember { mutableIntStateOf(0) }
+    val accent = listOf(Purple, Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))[themeIndex]
     MaterialTheme {
         Scaffold(
             containerColor = CanvasColor,
@@ -69,9 +76,9 @@ private fun PersianCalendarApp() {
             Surface(Modifier.fillMaxSize().padding(padding), color = CanvasColor) {
                 when (selectedTab) {
                     0 -> CalendarHome()
-                    1 -> PlaceholderPage("تبدیل تاریخ", "تبدیل دوطرفه تاریخ شمسی و میلادی")
-                    2 -> PlaceholderPage("اوقات شرعی", "انتخاب شهر و محاسبه زمان‌های شرعی")
-                    else -> PlaceholderPage("تنظیمات", "پوسته، فونت، اعلان‌ها و پخش اذان")
+                    1 -> DateConverter(accent)
+                    2 -> IranClockPage()
+                    else -> SettingsPage(themeIndex, { themeIndex = it }, accent)
                 }
             }
         }
@@ -183,6 +190,83 @@ private fun CalendarHome() {
         Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
             Text("هنوز رویدادی برای این روز ثبت نشده است.", Modifier.padding(16.dp).fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
         }
+    }
+}
+
+
+@Composable
+private fun DateConverter(accent: Color) {
+    var jy by remember { mutableStateOf("۱۴۰۵") }; var jm by remember { mutableStateOf("۱") }; var jd by remember { mutableStateOf("۱") }
+    var gy by remember { mutableStateOf("۲۰۲۶") }; var gm by remember { mutableStateOf("۳") }; var gd by remember { mutableStateOf("۲۱") }
+    var result by remember { mutableStateOf("تاریخ را وارد کنید.") }
+    fun num(s: String): Int? = s.map { if (it in '۰'..'۹') ('0'.code + it.code - '۰'.code).toChar() else it }.joinToString("").toIntOrNull()
+    Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Text("تبدیل تاریخ", color=Ink, fontSize=24.sp, fontWeight=FontWeight.Bold)
+        Card(colors=CardDefaults.cardColors(containerColor=Color.White), shape=RoundedCornerShape(20.dp)) {
+            Column(Modifier.padding(14.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                Text("شمسی به میلادی", color=accent, fontWeight=FontWeight.Bold)
+                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                    DateField("سال",jy,{jy=it},Modifier.weight(1.2f)); DateField("ماه",jm,{jm=it},Modifier.weight(1f)); DateField("روز",jd,{jd=it},Modifier.weight(1f))
+                }
+                Button(onClick={
+                    val y=num(jy); val m=num(jm); val d=num(jd)
+                    result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
+                        val c=persianCalendar(); c.clear(); c.set(y,m-1,d)
+                        SimpleDateFormat("yyyy/MM/dd",Locale.US).format(c.time)
+                    }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
+                }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به میلادی")}
+            }
+        }
+        Card(colors=CardDefaults.cardColors(containerColor=Color.White), shape=RoundedCornerShape(20.dp)) {
+            Column(Modifier.padding(14.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                Text("میلادی به شمسی", color=accent, fontWeight=FontWeight.Bold)
+                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                    DateField("سال",gy,{gy=it},Modifier.weight(1.2f)); DateField("ماه",gm,{gm=it},Modifier.weight(1f)); DateField("روز",gd,{gd=it},Modifier.weight(1f))
+                }
+                Button(onClick={
+                    val y=num(gy); val m=num(gm); val d=num(gd)
+                    result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
+                        val c=GregorianCalendar(y,m-1,d); val p=persianCalendar(); p.timeInMillis=c.timeInMillis
+                        faNumber(p.get(Calendar.YEAR))+"/"+faNumber(p.get(Calendar.MONTH)+1)+"/"+faNumber(p.get(Calendar.DAY_OF_MONTH))
+                    }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
+                }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به شمسی")}
+            }
+        }
+        Card(colors=CardDefaults.cardColors(containerColor=accent.copy(alpha=.10f)), shape=RoundedCornerShape(18.dp)){Text(result,Modifier.fillMaxWidth().padding(16.dp),color=Ink,textAlign=TextAlign.Center,fontSize=17.sp)}
+    }
+}
+@Composable
+private fun DateField(label:String,value:String,onValue:(String)->Unit,modifier:Modifier=Modifier){
+    OutlinedTextField(value=value,onValueChange={onValue(it.filter{ch->ch.isDigit() || ch in '۰'..'۹'}.take(4))},label={Text(label)},modifier=modifier,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
+}
+@Composable
+private fun IranClockPage(){
+    var now by remember{mutableLongStateOf(System.currentTimeMillis())}
+    LaunchedEffect(Unit){while(true){now=System.currentTimeMillis();kotlinx.coroutines.delay(1000)}}
+    val time=remember(now){SimpleDateFormat("HH:mm:ss",Locale("fa","IR")).apply{timeZone=java.util.TimeZone.getTimeZone("Asia/Tehran")}.format(java.util.Date(now))}
+    val date=remember(now){val c=persianCalendar().apply{timeInMillis=now};faNumber(c.get(Calendar.DAY_OF_MONTH))+" "+MonthNames[c.get(Calendar.MONTH)]+" "+faNumber(c.get(Calendar.YEAR))}
+    Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally){
+        Text("ساعت رسمی ایران",color=Muted,fontSize=16.sp); Spacer(Modifier.height(12.dp))
+        Text(time,color=Purple,fontSize=46.sp,fontWeight=FontWeight.Bold); Text(date,color=Ink,fontSize=20.sp,fontWeight=FontWeight.SemiBold)
+        Spacer(Modifier.height(14.dp)); Text("منطقه زمانی Asia/Tehran",color=Muted,fontSize=12.sp)
+        Text("محاسبه اوقات شرعی و اذان در حال توسعه است.",color=Muted,fontSize=12.sp)
+    }
+}
+@Composable
+private fun SettingsPage(themeIndex:Int,onTheme:(Int)->Unit,accent:Color){
+    val palette=listOf(Color(0xFF7255C7),Color(0xFF087E9B),Color(0xFF16845B),Color(0xFFB65C83),Color(0xFFB58A35))
+    val names=listOf("بنفش سلطنتی","آبی اقیانوسی","سبز زمردی","صورتی رزگلد","مشکی و طلایی")
+    Column(Modifier.fillMaxSize().padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
+        Text("تنظیمات",color=Ink,fontSize=24.sp,fontWeight=FontWeight.Bold)
+        Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(20.dp)){
+            Column(Modifier.padding(14.dp)){Text("انتخاب تم رنگی",color=Muted); names.forEachIndexed{index,name->
+                Row(Modifier.fillMaxWidth().clickable{onTheme(index)}.padding(vertical=7.dp),verticalAlignment=Alignment.CenterVertically){
+                    Box(Modifier.size(28.dp).background(palette[index],CircleShape)); Text(name,Modifier.weight(1f).padding(start=12.dp),color=Ink)
+                    RadioButton(selected=themeIndex==index,onClick={onTheme(index)},colors=RadioButtonDefaults.colors(selectedColor=accent))
+                }
+            }}
+        }
+        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰.۳.۰",color=Muted,fontSize=12.sp)
     }
 }
 
