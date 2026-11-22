@@ -118,7 +118,7 @@ private fun CalendarHome() {
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("گاه‌شمار هوشمند", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("تقویم روزنگار", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text("تقویم فارسی و زمان ایران", color = Muted, fontSize = 13.sp)
             }
             Box(Modifier.size(46.dp).background(Purple.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
