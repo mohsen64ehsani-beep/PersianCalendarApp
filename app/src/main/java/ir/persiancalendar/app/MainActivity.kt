@@ -270,7 +270,7 @@ private fun SettingsPage(themeIndex:Int,onTheme:(Int)->Unit,accent:Color){
                 }
             }}
         }
-        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰.۳.۰",color=Muted,fontSize=12.sp)
+        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰.۴.۰",color=Muted,fontSize=12.sp)
     }
 }
 
