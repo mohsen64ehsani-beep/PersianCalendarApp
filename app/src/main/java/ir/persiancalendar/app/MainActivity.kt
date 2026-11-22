@@ -65,7 +65,7 @@ private fun PersianCalendarApp() {
     var selectedTab by remember { mutableIntStateOf(0) }
     var themeIndex by remember { mutableIntStateOf(context.getSharedPreferences("daynegar", 0).getInt("theme", 0).coerceIn(0, 4)) }
     val accent = listOf(Purple, Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))[themeIndex]
-    MaterialTheme {
+    MaterialTheme(colorScheme = lightColorScheme(primary = accent, secondary = accent, tertiary = accent)) {
         Scaffold(
             containerColor = CanvasColor,
             bottomBar = {
@@ -81,7 +81,7 @@ private fun PersianCalendarApp() {
                 when (selectedTab) {
                     0 -> CalendarHome(accent)
                     1 -> DateConverter(accent)
-                    2 -> IranClockPage()
+                    2 -> IranClockPage(accent)
                     else -> SettingsPage(themeIndex, { themeIndex = it; context.getSharedPreferences("daynegar", 0).edit().putInt("theme", it).apply() }, accent)
                 }
             }
@@ -128,6 +128,9 @@ private fun CalendarHome(accent: Color) {
             prefs.getStringSet("events_$eventKey", emptySet<String>())?.toList()?.sorted() ?: emptyList()
         )
     }
+    val officialEvents = remember(visibleYear, visibleMonth, selectedDay) {
+        IranCalendarEvents.forDate(visibleYear, visibleMonth + 1, selectedDay)
+    }
     var showAddEvent by remember { mutableStateOf(false) }
     var eventTitle by remember { mutableStateOf("") }
 
@@ -161,7 +164,7 @@ private fun CalendarHome(accent: Color) {
                 Text("تقویم روزنگار", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text("تقویم فارسی و زمان ایران", color = Muted, fontSize = 13.sp)
             }
-            Box(Modifier.size(46.dp).background(Purple.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(46.dp).background(accent.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.CalendarMonth, null, tint = accent)
             }
         }
@@ -198,6 +201,7 @@ private fun CalendarHome(accent: Color) {
             items(cells) { value ->
                 val isSelected = value != 0 && value == selectedDay
                 val isToday = value != 0 && visibleYear == todayYear && visibleMonth == todayMonth && value == todayDay
+                val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
                 Box(
                     Modifier.fillMaxWidth().padding(2.dp).aspectRatio(0.94f).then(
                         if (isSelected) Modifier.background(accent, CircleShape) else Modifier
@@ -207,11 +211,11 @@ private fun CalendarHome(accent: Color) {
                     if (value != 0) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Text(faNumber(value),
-                                color = when { isSelected -> Color.White; isToday -> accent; else -> Ink },
+                                color = when { isSelected -> Color.White; isToday -> accent; isHoliday -> Color(0xFFD45D68); else -> Ink },
                                 fontSize = 17.sp,
                                 fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium)
-                            if (isToday && !isSelected) {
-                                Box(Modifier.padding(top = 1.dp).size(4.dp).background(accent, CircleShape))
+                            if ((isToday || isHoliday) && !isSelected) {
+                                Box(Modifier.padding(top = 1.dp).size(4.dp).background(if (isToday) accent else Color(0xFFD45D68), CircleShape))
                             }
                         }
                     }
@@ -227,6 +231,24 @@ private fun CalendarHome(accent: Color) {
             }) { Text("بازگشت به امروز", color = accent, fontSize = 14.sp) }
         }
         Spacer(Modifier.height(4.dp))
+        if (officialEvents.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text("مناسبت‌های رسمی", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    officialEvents.forEach { occasion ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("•", color = if (occasion.isHoliday) Color(0xFFD45D68) else accent, fontSize = 20.sp)
+                            Text(occasion.title, Modifier.padding(start = 8.dp), color = Ink, fontSize = 13.sp)
+                            if (occasion.isHoliday) {
+                                Spacer(Modifier.weight(1f))
+                                Text("تعطیل", color = Color(0xFFD45D68), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             TextButton(onClick = { eventTitle = ""; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
@@ -327,14 +349,14 @@ private fun DateField(label:String,value:String,onValue:(String)->Unit,modifier:
     OutlinedTextField(value=value,onValueChange={onValue(it.filter{ch->ch.isDigit() || ch in '۰'..'۹'}.take(4))},label={Text(label)},modifier=modifier,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
 }
 @Composable
-private fun IranClockPage(){
+private fun IranClockPage(accent: Color){
     var now by remember{mutableLongStateOf(System.currentTimeMillis())}
     LaunchedEffect(Unit){while(true){now=System.currentTimeMillis();kotlinx.coroutines.delay(1000)}}
     val time=remember(now){SimpleDateFormat("HH:mm:ss",Locale("fa","IR")).apply{timeZone=java.util.TimeZone.getTimeZone("Asia/Tehran")}.format(java.util.Date(now))}
     val date=remember(now){val c=persianCalendar().apply{timeInMillis=now};faNumber(c.get(Calendar.DAY_OF_MONTH))+" "+MonthNames[c.get(Calendar.MONTH)]+" "+faNumber(c.get(Calendar.YEAR))}
     Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally){
         Text("ساعت رسمی ایران",color=Muted,fontSize=16.sp); Spacer(Modifier.height(12.dp))
-        Text(time,color=Purple,fontSize=46.sp,fontWeight=FontWeight.Bold); Text(date,color=Ink,fontSize=20.sp,fontWeight=FontWeight.SemiBold)
+        Text(time,color=accent,fontSize=46.sp,fontWeight=FontWeight.Bold); Text(date,color=Ink,fontSize=20.sp,fontWeight=FontWeight.SemiBold)
         Spacer(Modifier.height(14.dp)); Text("منطقه زمانی Asia/Tehran",color=Muted,fontSize=12.sp)
         Text("محاسبه اوقات شرعی و اذان در حال توسعه است.",color=Muted,fontSize=12.sp)
     }
@@ -353,7 +375,7 @@ private fun SettingsPage(themeIndex:Int,onTheme:(Int)->Unit,accent:Color){
                 }
             }}
         }
-        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰.۴.۰",color=Muted,fontSize=12.sp)
+        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰٫۸٫۰",color=Muted,fontSize=12.sp)
     }
 }
 
