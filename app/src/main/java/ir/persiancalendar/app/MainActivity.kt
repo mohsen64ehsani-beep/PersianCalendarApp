@@ -124,7 +124,9 @@ private fun CalendarHome(accent: Color) {
     val eventKey = "$visibleYear-$visibleMonth-$selectedDay"
     val prefs = remember { context.getSharedPreferences("daynegar", 0) }
     var events by remember(eventKey) {
-        mutableStateOf(prefs.getStringSet("events_$eventKey", emptySet())?.toList()?.sorted() ?: emptyList())
+        mutableStateOf<List<String>>(
+            prefs.getStringSet("events_$eventKey", emptySet<String>())?.toList()?.sorted() ?: emptyList()
+        )
     }
     var showAddEvent by remember { mutableStateOf(false) }
     var eventTitle by remember { mutableStateOf("") }
