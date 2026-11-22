@@ -3,7 +3,6 @@ package ir.persiancalendar.app
 import android.os.Bundle
 import android.icu.util.Calendar
 import android.icu.util.ULocale
-import java.util.Locale
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -16,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WbSunny
@@ -41,10 +42,14 @@ private val Muted = Color(0xFF77778A)
 private val Purple = Color(0xFF7255C7)
 private val CanvasColor = Color(0xFFF6F4FA)
 private val MonthNames = listOf("فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند")
-private val WeekDays = listOf("ش", "ی", "د", "س", "چ", "پ", "ج")
+private val WeekDays = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه")
+private val PersianDigits = "۰۱۲۳۴۵۶۷۸۹"
 
 private fun faNumber(value: Int): String =
-    value.toString().map { if (it in '0'..'9') "۰۱۲۳۴۵۶۷۸۹"[it - '0'] else it }.joinToString("")
+    value.toString().map { if (it in '0'..'9') PersianDigits[it - '0'] else it }.joinToString("")
+
+private fun persianCalendar(): Calendar =
+    Calendar.getInstance(android.icu.util.TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian"))
 
 @Composable
 private fun PersianCalendarApp() {
@@ -76,70 +81,107 @@ private fun PersianCalendarApp() {
 @Composable
 private fun CalendarHome() {
     val today = remember {
-        Calendar.getInstance(android.icu.util.TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply {
-            timeInMillis = System.currentTimeMillis()
+        persianCalendar().apply { timeInMillis = System.currentTimeMillis() }
+    }
+    val todayYear = today.get(Calendar.YEAR)
+    val todayMonth = today.get(Calendar.MONTH)
+    val todayDay = today.get(Calendar.DAY_OF_MONTH)
+
+    var visibleYear by remember { mutableIntStateOf(todayYear) }
+    var visibleMonth by remember { mutableIntStateOf(todayMonth) }
+    var selectedDay by remember { mutableIntStateOf(todayDay) }
+
+    val monthCalendar = remember(visibleYear, visibleMonth) {
+        persianCalendar().apply {
+            set(Calendar.YEAR, visibleYear)
+            set(Calendar.MONTH, visibleMonth)
+            set(Calendar.DAY_OF_MONTH, 1)
         }
     }
-    val year = today.get(Calendar.YEAR)
-    val month = today.get(Calendar.MONTH)
-    val day = today.get(Calendar.DAY_OF_MONTH)
-    val firstDay = remember(year, month) {
-        Calendar.getInstance(android.icu.util.TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply {
-            timeInMillis = today.timeInMillis
-            set(Calendar.DAY_OF_MONTH, 1)
-        }.get(Calendar.DAY_OF_WEEK)
-    }
-    val monthLength = today.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val offset = firstDay % 7
+    val firstDay = monthCalendar.get(Calendar.DAY_OF_WEEK)
+    val monthLength = monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val offset = firstDay % 7 // ICU: Sunday=1; Persian calendar grid starts Saturday.
     val cells = (0 until offset).map { 0 } + (1..monthLength).toList()
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 16.dp)) {
+    fun moveMonth(amount: Int) {
+        val moved = persianCalendar().apply {
+            set(Calendar.YEAR, visibleYear)
+            set(Calendar.MONTH, visibleMonth)
+            set(Calendar.DAY_OF_MONTH, 1)
+            add(Calendar.MONTH, amount)
+        }
+        visibleYear = moved.get(Calendar.YEAR)
+        visibleMonth = moved.get(Calendar.MONTH)
+        selectedDay = 1
+    }
+
+    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
                 Text("گاه‌شمار هوشمند", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("تقویم فارسی و زمان ایران", color = Muted, fontSize = 12.sp)
+                Text("تقویم فارسی و زمان ایران", color = Muted, fontSize = 13.sp)
             }
-            Box(Modifier.size(44.dp).background(Purple.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(46.dp).background(Purple.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.CalendarMonth, null, tint = Purple)
             }
         }
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(16.dp))
         Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("امروز", color = Muted, fontSize = 12.sp)
-                Text(faNumber(day) + " " + MonthNames[month] + " " + faNumber(year), color = Ink, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                Text("بر اساس ساعت رسمی ایران", color = Muted, fontSize = 11.sp)
+            Column(Modifier.padding(horizontal = 17.dp, vertical = 14.dp)) {
+                Text(if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) "امروز" else "تاریخ انتخاب‌شده", color = Muted, fontSize = 13.sp)
+                Text(faNumber(selectedDay) + " " + MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                Text("بر اساس ساعت رسمی ایران", color = Muted, fontSize = 12.sp)
             }
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(14.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(MonthNames[month] + " " + faNumber(year), color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("امروز", color = Purple, fontSize = 13.sp, modifier = Modifier.clickable { })
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth()) {
-            WeekDays.forEach { name ->
-                Text(name, Modifier.weight(1f), textAlign = TextAlign.Center, color = Muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            IconButton(onClick = { moveMonth(-1) }) { Icon(Icons.Default.ChevronRight, "ماه قبل", tint = Purple, modifier = Modifier.size(30.dp)) }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("برای جابه‌جایی بین ماه‌ها از فلش‌ها استفاده کنید", color = Muted, fontSize = 10.sp)
             }
+            IconButton(onClick = { moveMonth(1) }) { Icon(Icons.Default.ChevronLeft, "ماه بعد", tint = Purple, modifier = Modifier.size(30.dp)) }
         }
         Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth()) {
+            WeekDays.forEach { name ->
+                Text(name.take(1), Modifier.weight(1f), textAlign = TextAlign.Center, color = Muted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        Spacer(Modifier.height(6.dp))
         LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.fillMaxWidth(), userScrollEnabled = false) {
             items(cells) { value ->
+                val isSelected = value != 0 && value == selectedDay
                 Box(
-                    Modifier.fillMaxWidth().padding(3.dp).aspectRatio(1f).then(
-                        if (value == day) Modifier.background(Purple, CircleShape) else Modifier
-                    ),
+                    Modifier.fillMaxWidth().padding(2.dp).aspectRatio(0.94f).then(
+                        if (isSelected) Modifier.background(Purple, CircleShape) else Modifier
+                    ).clickable(enabled = value != 0) { selectedDay = value },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (value != 0) Text(faNumber(value), color = if (value == day) Color.White else Ink, fontSize = 14.sp, fontWeight = if (value == day) FontWeight.Bold else FontWeight.Normal)
+                    if (value != 0) {
+                        Text(
+                            faNumber(value),
+                            color = if (isSelected) Color.White else Ink,
+                            fontSize = 18.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Text("رویدادها و یادآورها", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            TextButton(onClick = {
+                visibleYear = todayYear
+                visibleMonth = todayMonth
+                selectedDay = todayDay
+            }) { Text("بازگشت به امروز", color = Purple, fontSize = 14.sp) }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(7.dp))
         Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
-            Text("هنوز رویدادی ثبت نشده است.", Modifier.padding(18.dp).fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
+            Text("هنوز رویدادی برای این روز ثبت نشده است.", Modifier.padding(16.dp).fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
         }
     }
 }
