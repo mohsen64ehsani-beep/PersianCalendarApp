@@ -36,9 +36,3 @@ jobs:
           name: persian-calendar-release-unsigned
           path: app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
-      - name: Upload Android APK signing tools
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk-signing-tools
-          path: ${{ env.ANDROID_HOME }}/build-tools/36.0.0/
-          if-no-files-found: error
