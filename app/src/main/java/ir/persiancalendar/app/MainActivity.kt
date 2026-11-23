@@ -378,11 +378,12 @@ private fun CalendarHome(accent: Color) {
                                 val dayMonth = dayCal.get(Calendar.MONTH)
                                 val dayYear = dayCal.get(Calendar.YEAR)
                                 val isChosen = dayYear == visibleYear && dayMonth == visibleMonth && dayNum == selectedDay
+                                val isFriday = index == 6
                                 Column(Modifier.weight(1f).background(if (isChosen) accent else CanvasColor, RoundedCornerShape(12.dp))
                                     .clickable { visibleYear = dayYear; visibleMonth = dayMonth; selectedDay = dayNum }
                                     .padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(listOf("ش","ی","د","س","چ","پ","ج")[index], color = if (isChosen) Color.White.copy(alpha=.8f) else Muted, fontSize = 10.sp)
-                                    Text(faNumber(dayNum), color = if (isChosen) Color.White else Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text(listOf("ش","ی","د","س","چ","پ","ج")[index], color = if (isChosen) Color.White.copy(alpha=.8f) else if (isFriday) Color(0xFFD13F50) else Muted, fontSize = 10.sp)
+                                    Text(faNumber(dayNum), color = if (isChosen) Color.White else if (isFriday || IranCalendarEvents.isHoliday(dayYear, dayMonth + 1, dayNum)) Color(0xFFD13F50) else Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         }
