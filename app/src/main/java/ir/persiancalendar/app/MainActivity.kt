@@ -24,6 +24,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -286,6 +287,8 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
         IranCalendarEvents.forMonth(visibleYear, visibleMonth + 1)
     }
     var showAddEvent by remember { mutableStateOf(false) }
+    var showMonthSheet by remember { mutableStateOf(false) }
+    var showGhazalSheet by remember { mutableStateOf(false) }
     var eventTitle by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf("09:00") }
     var pendingReminder by remember { mutableStateOf<Pair<Triple<Int, String, Long>, Boolean>?>(null) }
@@ -393,9 +396,10 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
             }
         }
         Spacer(Modifier.height(12.dp))
-        HafezGhazalCard(accent, visitToken)
-        Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Spacer(Modifier.height(14.dp))
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth().background(CanvasColor, RoundedCornerShape(14.dp)).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf("ماه", "هفته", "سال").forEach { mode ->
                 val selected = calendarMode == mode
                 Box(Modifier.weight(1f).background(if (selected) accent else Color.Transparent, RoundedCornerShape(12.dp))
@@ -483,7 +487,9 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
                             val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
                             val isFriday = columnIndex == 6
                             val redDay = isFriday || isHoliday
-                            Box(Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f).then(if (isSelected) Modifier.background(if (redDay) Color(0xFFD13F50) else accent, CircleShape) else Modifier)
+                            Box(Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f)
+                                .then(if (isSelected) Modifier.background(if (redDay) Color(0xFFD13F50) else accent, RoundedCornerShape(10.dp)) else Modifier)
+                                .then(if (value != 0 && redDay && !isSelected) Modifier.border(1.4.dp, Color(0xFFD13F50), RoundedCornerShape(10.dp)) else Modifier)
                                 .clickable(enabled = value != 0) { selectedDay = value }, contentAlignment = Alignment.Center) {
                                 if (value != 0) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -499,38 +505,20 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
                 }
             }
         }
+        }
+        }
         if (calendarMode == "ماه") {
-            Spacer(Modifier.height(12.dp))
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("روزهای مهم این ماه", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("مناسبت‌های رسمی، فرهنگی و ملی", color = Muted, fontSize = 11.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = { showMonthSheet = true }, modifier = Modifier.weight(1f).height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
+                    Icon(Icons.Default.CalendarMonth, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("روزهای مهم این ماه", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
-                Text(faNumber(monthOccasions.size) + " مناسبت", color = accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            }
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
-                if (monthOccasions.isEmpty()) {
-                    Text("برای این ماه هنوز مناسبت ثبت نشده است.", Modifier.fillMaxWidth().padding(18.dp), color = Muted, textAlign = TextAlign.Center, fontSize = 12.sp)
-                } else {
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)) {
-                        monthOccasions.forEachIndexed { index, entry ->
-                            Row(Modifier.fillMaxWidth().padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(38.dp).background(if (entry.second.isHoliday) Color(0xFFFFE8EA) else accent.copy(alpha = .10f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                                    Text(faNumber(entry.first), color = if (entry.second.isHoliday) Color(0xFFC43F50) else accent, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
-                                }
-                                Column(Modifier.weight(1f).padding(start = 11.dp)) {
-                                    Text(entry.second.title, color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                    Text(if (entry.second.isHoliday) "تعطیل رسمی" else "مناسبت", color = if (entry.second.isHoliday) Color(0xFFC43F50) else Muted, fontSize = 10.sp)
-                                }
-                                Text("›", color = Muted, fontSize = 22.sp)
-                            }
-                            if (index != monthOccasions.lastIndex) HorizontalDivider(color = Muted.copy(alpha = .12f))
-                        }
-                    }
+                OutlinedButton(onClick = { showGhazalSheet = true }, modifier = Modifier.weight(1f).height(54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
+                    Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("غزل امروز", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
         Spacer(Modifier.height(10.dp))
+
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             TextButton(onClick = {
                 visibleYear = todayYear
@@ -636,6 +624,42 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
                 },
                 dismissButton = { TextButton(onClick = { showAddEvent = false }) { Text("انصراف") } }
             )
+        }
+    }
+    if (showMonthSheet) {
+        ModalBottomSheet(onDismissRequest = { showMonthSheet = false }, containerColor = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("روزهای مهم ${MonthNames[visibleMonth]}", color = Ink, fontSize = 19.sp, fontWeight = FontWeight.ExtraBold)
+                Text("مناسبت‌های تعطیل رسمی با رنگ قرمز مشخص شده‌اند.", color = Muted, fontSize = 11.sp)
+                if (monthOccasions.isEmpty()) Text("برای این ماه مناسبتی ثبت نشده است.", color = Muted, modifier = Modifier.padding(vertical = 18.dp))
+                monthOccasions.forEach { entry ->
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).clickable { selectedDay = entry.first; showMonthSheet = false }.padding(vertical = 10.dp, horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(40.dp).background(if (entry.second.isHoliday) Color(0xFFFFE8EA) else accent.copy(alpha = .10f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                            Text(faNumber(entry.first), color = if (entry.second.isHoliday) Color(0xFFC43F50) else accent, fontWeight = FontWeight.ExtraBold)
+                        }
+                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                            Text(entry.second.title, color = if (entry.second.isHoliday) Color(0xFFC43F50) else Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            if (entry.second.isHoliday) Text("تعطیل رسمی", color = Color(0xFFC43F50), fontSize = 10.sp)
+                        }
+                        Text("›", color = Muted, fontSize = 22.sp)
+                    }
+                    HorizontalDivider(color = Muted.copy(alpha = .12f))
+                }
+            }
+        }
+    }
+    val dailyGhazal = remember(visibleYear, visibleMonth, selectedDay) {
+        HafezGhazals[Math.floorMod(visibleYear * 367 + visibleMonth * 31 + selectedDay, HafezGhazals.size)]
+    }
+    if (showGhazalSheet) {
+        ModalBottomSheet(onDismissRequest = { showGhazalSheet = false }, containerColor = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 30.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(Icons.Default.AutoAwesome, null, tint = accent, modifier = Modifier.size(28.dp))
+                Text(dailyGhazal.title, color = accent, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+                Text(dailyGhazal.verses, color = Ink, fontSize = 13.sp, lineHeight = 27.sp, textAlign = TextAlign.Center)
+                HorizontalDivider(color = Muted.copy(alpha = .18f))
+                Text("حافظ شیرازی", color = accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
