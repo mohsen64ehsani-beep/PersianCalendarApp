@@ -1,0 +1,9 @@
+Adhan.ogg
+
+Source: https://commons.wikimedia.org/wiki/File:Adhan.ogg
+Author/uploader: Aishatu98
+License: Creative Commons CC0 1.0 Universal Public Domain Dedication
+Duration: approximately 42 seconds
+SHA-1: b86432f1581e11f898de1dc3402af0d541af110e
+
+The Gradle preBuild task downloads the original file only when it is absent and verifies this SHA-1 before packaging. If the source file is unavailable or its checksum changes, the build fails rather than silently packaging different audio.
