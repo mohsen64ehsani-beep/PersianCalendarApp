@@ -589,9 +589,15 @@ private fun PrayerTimesPage(accent: Color) {
         moment.title to formatter.format(java.time.Instant.ofEpochMilli(moment.atMillis).atOffset(ZoneOffset.ofHoursMinutes(3, 30)))
     }
     var pendingPrayerReminders by remember { mutableStateOf<List<PrayerMoment>>(emptyList()) }
+    var scheduledPrayerReminderCount by remember { mutableIntStateOf(0) }
     val prayerNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) pendingPrayerReminders.forEach { reminder ->
-            EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
+        if (granted) {
+            pendingPrayerReminders.forEach { reminder ->
+                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
+            }
+            scheduledPrayerReminderCount = pendingPrayerReminders.size
+        } else {
+            scheduledPrayerReminderCount = 0
         }
         pendingPrayerReminders = emptyList()
     }
@@ -610,6 +616,7 @@ private fun PrayerTimesPage(accent: Color) {
             schedules.forEach { reminder ->
                 EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
             }
+            scheduledPrayerReminderCount = schedules.size
         }
     }
     val dateLabel = remember(now) {
@@ -670,6 +677,9 @@ private fun PrayerTimesPage(accent: Color) {
         }
         Button(onClick = { schedulePrayerWeek() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = accent)) {
             Text("فعال‌سازی اعلان اوقات شرعی ۷ روز آینده")
+        }
+        if (scheduledPrayerReminderCount > 0) {
+            Text("${faNumber(scheduledPrayerReminderCount)} اعلان برای شهر ${city.name} تنظیم شد.", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
         Text("اعلان‌ها با صدای پیش‌فرض اعلان دستگاه پخش می‌شوند؛ برای پخش فایل کامل اذان، انتخاب و بسته‌بندی صدای دارای مجوز در مرحله بعد انجام می‌شود.", color = Muted, fontSize = 11.sp)
         Text("روش تهران: فجر ۱۷٫۷°، مغرب ۴٫۵° و عشا ۱۴° زیر افق. اختلاف دقیقه‌ای ممکن است به‌دلیل مختصات و گردکردن با جدول محلی متفاوت باشد.", color = Muted, fontSize = 11.sp)
