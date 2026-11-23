@@ -43,10 +43,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private val Ink = Color(0xFF202033)
-private val Muted = Color(0xFF77778A)
+private data class DayPalette(val ink: Color, val muted: Color, val canvas: Color, val surface: Color)
+private val LocalDayPalette = androidx.compose.runtime.staticCompositionLocalOf {
+    DayPalette(Color(0xFF202033), Color(0xFF77778A), Color(0xFFF6F4FA), Color.White)
+}
+private val Ink: Color @Composable get() = LocalDayPalette.current.ink
+private val Muted: Color @Composable get() = LocalDayPalette.current.muted
+private val CanvasColor: Color @Composable get() = LocalDayPalette.current.canvas
 private val Purple = Color(0xFF7255C7)
-private val CanvasColor = Color(0xFFF6F4FA)
 private val MonthNames = listOf("فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند")
 private val WeekDays = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه")
 private val PersianDigits = "۰۱۲۳۴۵۶۷۸۹"
@@ -61,9 +65,21 @@ private fun persianCalendar(): Calendar =
 private fun PersianCalendarApp() {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
-    var themeIndex by remember { mutableIntStateOf(context.getSharedPreferences("daynegar", 0).getInt("theme", 0).coerceIn(0, 4)) }
+    val preferences = remember { context.getSharedPreferences("daynegar", 0) }
+    var themeIndex by remember { mutableIntStateOf(preferences.getInt("theme", 0).coerceIn(0, 4)) }
+    var darkMode by remember { mutableStateOf(preferences.getBoolean("dark_mode", false)) }
+    var fontChoice by remember { mutableIntStateOf(preferences.getInt("font_choice", 0).coerceIn(0, 2)) }
     val accent = listOf(Purple, Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))[themeIndex]
-    MaterialTheme(colorScheme = lightColorScheme(primary = accent, secondary = accent, tertiary = accent)) {
+    val palette = if (darkMode) DayPalette(Color(0xFFF1EFF8), Color(0xFFB8B4C7), Color(0xFF15141B), Color(0xFF24222D))
+        else DayPalette(Color(0xFF202033), Color(0xFF77778A), Color(0xFFF6F4FA), Color.White)
+    val colors = if (darkMode) darkColorScheme(primary = accent, secondary = accent, tertiary = accent,
+        background = palette.canvas, surface = palette.surface, onBackground = palette.ink, onSurface = palette.ink)
+        else lightColorScheme(primary = accent, secondary = accent, tertiary = accent,
+        background = palette.canvas, surface = palette.surface, onBackground = palette.ink, onSurface = palette.ink)
+    val selectedFont = when (fontChoice) { 1 -> androidx.compose.ui.text.font.FontFamily.Serif; 2 -> androidx.compose.ui.text.font.FontFamily.Monospace; else -> androidx.compose.ui.text.font.FontFamily.SansSerif }
+    CompositionLocalProvider(LocalDayPalette provides palette, androidx.compose.material3.LocalContentColor provides palette.ink) {
+    MaterialTheme(colorScheme = colors) {
+        CompositionLocalProvider(androidx.compose.material.LocalTextStyle provides androidx.compose.material.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
         Scaffold(
             containerColor = CanvasColor,
             bottomBar = {
@@ -80,10 +96,12 @@ private fun PersianCalendarApp() {
                     0 -> CalendarHome(accent)
                     1 -> DateConverter(accent)
                     2 -> IranClockPage(accent)
-                    else -> SettingsPage(themeIndex, { themeIndex = it; context.getSharedPreferences("daynegar", 0).edit().putInt("theme", it).apply() }, accent)
+                    else -> SettingsPage(themeIndex, { themeIndex = it; preferences.edit().putInt("theme", it).apply() }, darkMode, { darkMode = it; preferences.edit().putBoolean("dark_mode", it).apply() }, fontChoice, { fontChoice = it; preferences.edit().putInt("font_choice", it).apply() }, accent)
                 }
             }
         }
+        }
+    }
     }
 }
 
@@ -434,20 +452,59 @@ private fun IranClockPage(accent: Color){
     }
 }
 @Composable
-private fun SettingsPage(themeIndex:Int,onTheme:(Int)->Unit,accent:Color){
-    val palette=listOf(Color(0xFF7255C7),Color(0xFF087E9B),Color(0xFF16845B),Color(0xFFB65C83),Color(0xFFB58A35))
-    val names=listOf("بنفش سلطنتی","آبی اقیانوسی","سبز زمردی","صورتی رزگلد","مشکی و طلایی")
-    Column(Modifier.fillMaxSize().padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-        Text("تنظیمات",color=Ink,fontSize=24.sp,fontWeight=FontWeight.Bold)
-        Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(20.dp)){
-            Column(Modifier.padding(14.dp)){Text("انتخاب تم رنگی",color=Muted); names.forEachIndexed{index,name->
-                Row(Modifier.fillMaxWidth().clickable{onTheme(index)}.padding(vertical=7.dp),verticalAlignment=Alignment.CenterVertically){
-                    Box(Modifier.size(28.dp).background(palette[index],CircleShape)); Text(name,Modifier.weight(1f).padding(start=12.dp),color=Ink)
-                    RadioButton(selected=themeIndex==index,onClick={onTheme(index)},colors=RadioButtonDefaults.colors(selectedColor=accent))
+private fun SettingsPage(
+    themeIndex: Int,
+    onTheme: (Int) -> Unit,
+    darkMode: Boolean,
+    onDarkMode: (Boolean) -> Unit,
+    fontChoice: Int,
+    onFont: (Int) -> Unit,
+    accent: Color
+) {
+    val palette = listOf(Color(0xFF7255C7), Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))
+    val names = listOf("بنفش سلطنتی", "آبی اقیانوسی", "سبز زمردی", "صورتی رزگلد", "مشکی و طلایی")
+    val surface = MaterialTheme.colorScheme.surface
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text("شخصی‌سازی", color = Ink, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+        Text("ظاهر روزنگار را مطابق سلیقه‌ات تنظیم کن.", color = Muted, fontSize = 13.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("رنگ‌بندی برنامه", color = Ink, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                names.forEachIndexed { index, name ->
+                    Row(Modifier.fillMaxWidth().clickable { onTheme(index) }.padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(30.dp).background(palette[index], CircleShape))
+                        Text(name, Modifier.weight(1f).padding(start = 12.dp), color = Ink)
+                        RadioButton(selected = themeIndex == index, onClick = { onTheme(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
+                    }
                 }
-            }}
+            }
         }
-        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰٫۹٫۰",color=Muted,fontSize=12.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("حالت نمایش", color = Ink, fontWeight = FontWeight.Bold)
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("حالت تاریک", color = Ink)
+                        Text("زمینه تیره برای استفاده در شب", color = Muted, fontSize = 11.sp)
+                    }
+                    Switch(checked = darkMode, onCheckedChange = onDarkMode)
+                }
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("فونت رابط کاربری", color = Ink, fontWeight = FontWeight.Bold)
+                Text("انتخاب فونت‌های پایه دستگاه؛ بسته فونت‌های فارسی مجاز در مرحله بعد افزوده می‌شود.", color = Muted, fontSize = 11.sp)
+                listOf("ساده", "سریف", "تک‌فاصله").forEachIndexed { index, label ->
+                    Row(Modifier.fillMaxWidth().clickable { onFont(index) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(label, Modifier.weight(1f), color = Ink)
+                        RadioButton(selected = fontChoice == index, onClick = { onFont(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
+                    }
+                }
+            }
+        }
+        Text("روزنگار · نسخه توسعه", color = Muted, fontSize = 11.sp)
     }
 }
 
