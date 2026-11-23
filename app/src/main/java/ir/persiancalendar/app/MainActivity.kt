@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -162,7 +163,8 @@ private fun PersianCalendarApp() {
                     NavigationBarItem(selectedTab == 0, { selectedTab = 0 }, icon = { Icon(Icons.Default.CalendarMonth, null) }, label = { Text("تقویم") })
                     NavigationBarItem(selectedTab == 1, { selectedTab = 1 }, icon = { Icon(Icons.Default.CompareArrows, null) }, label = { Text("تبدیل تاریخ") })
                     NavigationBarItem(selectedTab == 2, { selectedTab = 2 }, icon = { Icon(Icons.Default.WbSunny, null) }, label = { Text("اوقات شرعی") })
-                    NavigationBarItem(selectedTab == 3, { selectedTab = 3 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("تنظیمات") })
+                    NavigationBarItem(selectedTab == 3, { selectedTab = 3 }, icon = { Icon(Icons.Default.Build, null) }, label = { Text("امکانات") })
+                    NavigationBarItem(selectedTab == 4, { selectedTab = 4 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("تنظیمات") })
                 }
             }
         ) { padding ->
@@ -171,6 +173,7 @@ private fun PersianCalendarApp() {
                     0 -> CalendarHome(accent)
                     1 -> DateConverter(accent)
                     2 -> PrayerTimesPage(accent)
+                    3 -> DaynegarToolsPage(accent)
                     else -> SettingsPage(themeIndex, { themeIndex = it; preferences.edit().putInt("theme", it).apply() }, darkMode, { darkMode = it; preferences.edit().putBoolean("dark_mode", it).apply() }, fontChoice, { fontChoice = it; preferences.edit().putInt("font_choice", it).apply() }, accent)
                 }
             }
