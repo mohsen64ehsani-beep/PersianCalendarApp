@@ -1026,7 +1026,7 @@ private fun SettingsPage(
                 Text("درباره روزنگار", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CalendarMonth, null, tint = accent)
-                    Text("روزنگار · نسخه ۱٫۰٫۱", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text("روزنگار · نسخه ۱٫۱٫۰", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
                 Text("تقویم شمسی، مناسبت‌های ایران، تبدیل تاریخ، رویدادها و اوقات شرعی در یک همراه روزانه.", color = Muted, fontSize = 11.sp)
             }
