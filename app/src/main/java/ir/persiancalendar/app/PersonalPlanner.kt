@@ -198,3 +198,50 @@ fun PersonalPlannerCard(accent: Color) {
         )
     }
 }
+
+@Composable
+fun PersonalStatsCard(accent: Color) {
+    val context = LocalContext.current
+    val toolsPrefs = remember { context.getSharedPreferences("daynegar_tools", 0) }
+    val reminderPrefs = remember { context.getSharedPreferences("daynegar_reminders", 0) }
+    val tasks = decodePlannerTasks(toolsPrefs.getString("personal_tasks_v1", null))
+    val completed = tasks.count { it.completed }
+    val savedEvents = toolsPrefs.all.count { (key, value) ->
+        key.startsWith("events_") && value is Set<*> && value.isNotEmpty()
+    }
+    val savedNotes = toolsPrefs.all.count { (key, value) ->
+        key.startsWith("note_") && value is String && value.isNotBlank()
+    }
+    val activeReminders = reminderPrefs.all.count { (key, value) ->
+        key.startsWith("reminder_") && value is String
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("خلاصه فعالیت‌های شخصی", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                PlannerStatCell("کار انجام‌شده", "$completed از ${tasks.size}", accent, Modifier.weight(1f))
+                PlannerStatCell("رویدادها", savedEvents.toString(), accent, Modifier.weight(1f))
+                PlannerStatCell("یادداشت‌ها", savedNotes.toString(), accent, Modifier.weight(1f))
+                PlannerStatCell("یادآورها", activeReminders.toString(), accent, Modifier.weight(1f))
+            }
+            Text("آمار فقط از داده‌های ذخیره‌شده روی همین دستگاه محاسبه می‌شود.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
+        }
+    }
+}
+
+@Composable
+private fun PlannerStatCell(label: String, value: String, accent: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier.background(accent.copy(alpha = .08f), RoundedCornerShape(13.dp)).padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(value, color = accent, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp, maxLines = 1)
+    }
+}
