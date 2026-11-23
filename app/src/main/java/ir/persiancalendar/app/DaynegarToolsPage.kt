@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -152,9 +153,27 @@ fun DaynegarToolsPage(accent: Color) {
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("ابزارهای روزنگار", color = MaterialTheme.colorScheme.onBackground, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
-            Text("امکانات تکمیلی برای برنامه‌ریزی و مدیریت روزها", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF203747)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth().background(
+                    Brush.linearGradient(listOf(Color(0xFF203747), accent.copy(alpha = .86f), Color(0xFF426B70))),
+                    RoundedCornerShape(24.dp)
+                ).padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(Modifier.size(48.dp).background(Color.White.copy(alpha = .14f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(25.dp))
+                }
+                Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text("ابزارهای روزنگار", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("یادداشت، جست‌وجوی مناسبت، ساعت شهرها و ابزارهای روزانه", color = Color.White.copy(alpha = .78f), fontSize = 11.sp)
+                }
+            }
         }
         ToolCard(accent, "یادداشت امروز", "یادداشت کوتاه روزانه؛ به‌صورت خودکار روی گوشی ذخیره می‌شود.", Icons.Default.EditNote) {
             OutlinedTextField(value = note, onValueChange = { note = it.take(2000); prefs.edit().putString("note_$todayKey", it.take(2000)).apply() },
