@@ -1027,20 +1027,20 @@ private fun PrayerTimesPage(accent: Color) {
     val nextPrayer = prayerMoments.firstOrNull { it.atMillis > now }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
         DaynegarSectionHero("اوقات شرعی", dateLabel + " · محاسبه بر پایه موقعیت شهر انتخابی", accent)
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = accent)) {
-            Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(accent, accent.copy(alpha = .78f), Color(0xFF263653))), RoundedCornerShape(28.dp)).padding(20.dp)) {
+        Card(modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), RoundedCornerShape(24.dp)), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(0.dp)) {
+            Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp)).padding(19.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("اوقات شرعی امروز", color = Color.White.copy(alpha = .76f), fontSize = 11.sp)
-                            Text(city.name, color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
+                            Text("اوقات شرعی امروز", color = Muted, fontSize = 11.sp)
+                            Text(city.name, color = Ink, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
                         }
-                        Icon(Icons.Default.WbSunny, null, tint = Color.White, modifier = Modifier.size(34.dp))
+                        Icon(Icons.Default.WbSunny, null, tint = accent, modifier = Modifier.size(34.dp))
                     }
-                    HorizontalDivider(color = Color.White.copy(alpha = .22f))
-                    Text(if (nextPrayer != null) "نماز بعدی · " + nextPrayer.title else "برنامه امروز به پایان رسیده است", color = Color.White.copy(alpha = .82f), fontSize = 12.sp)
-                    Text(nextPrayer?.let { formatter.format(java.time.Instant.ofEpochMilli(it.atMillis).atOffset(ZoneOffset.ofHoursMinutes(3, 30))) } ?: "—", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
-                    Text("منطقه زمانی رسمی ایران · UTC+03:30", color = Color.White.copy(alpha = .7f), fontSize = 10.sp)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = .55f))
+                    Text(if (nextPrayer != null) "نماز بعدی · " + nextPrayer.title else "برنامه امروز به پایان رسیده است", color = Muted, fontSize = 12.sp)
+                    Text(nextPrayer?.let { formatter.format(java.time.Instant.ofEpochMilli(it.atMillis).atOffset(ZoneOffset.ofHoursMinutes(3, 30))) } ?: "—", color = accent, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                    Text("منطقه زمانی رسمی ایران · UTC+03:30", color = Muted, fontSize = 10.sp)
                 }
             }
         }
