@@ -1,6 +1,10 @@
 package ir.persiancalendar.app
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.icu.util.IslamicCalendar
 import android.icu.util.TimeZone
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -45,6 +50,23 @@ fun DaynegarToolsPage(accent: Color) {
     var query by remember { mutableStateOf("") }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var feedback by remember { mutableStateOf("") }
+    var compassAzimuth by remember { mutableFloatStateOf(0f) }
+    val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    DisposableEffect(sensorManager) {
+        val sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                val rotation = FloatArray(9)
+                val orientation = FloatArray(3)
+                SensorManager.getRotationMatrixFromVector(rotation, event.values)
+                SensorManager.getOrientation(rotation, orientation)
+                compassAzimuth = ((Math.toDegrees(orientation[0].toDouble()).toFloat() + 360f) % 360f)
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+        }
+        if (sensor != null) sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
+        onDispose { sensorManager.unregisterListener(listener) }
+    }
     LaunchedEffect(Unit) { while (true) { now = System.currentTimeMillis(); kotlinx.coroutines.delay(30_000) } }
 
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
