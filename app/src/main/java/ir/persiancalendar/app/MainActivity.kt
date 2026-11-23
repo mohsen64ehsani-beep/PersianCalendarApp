@@ -87,7 +87,7 @@ private fun PersianCalendarApp() {
     val selectedFont = when (fontChoice) { 1 -> androidx.compose.ui.text.font.FontFamily.Serif; 2 -> androidx.compose.ui.text.font.FontFamily.Monospace; else -> androidx.compose.ui.text.font.FontFamily.SansSerif }
     CompositionLocalProvider(LocalDayPalette provides palette, androidx.compose.material3.LocalContentColor provides palette.ink) {
     MaterialTheme(colorScheme = colors) {
-        CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
+        CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
         Scaffold(
             containerColor = CanvasColor,
             bottomBar = {
