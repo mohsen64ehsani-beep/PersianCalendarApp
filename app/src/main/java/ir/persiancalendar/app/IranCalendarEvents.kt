@@ -181,17 +181,139 @@ object IranCalendarEvents {
         (12 to 29) to listOf(IranCalendarOccasion("روز ملی شدن صنعت نفت ایران", true))
     )
 
+    // Additional Iranian cultural, historical, professional and regional occasions.
+    // Dates are Solar Hijri unless the title itself identifies a lunar observance.
+    private val year1405Additional = mapOf(
+        (1 to 7) to listOf(IranCalendarOccasion("روز هنرهای نمایشی", false)),
+        (1 to 10) to listOf(IranCalendarOccasion("جشن آبانگاه", false)),
+        (1 to 30) to listOf(IranCalendarOccasion("زادروز حکیم سید اسماعیل جرجانی", false)),
+        (2 to 2) to listOf(IranCalendarOccasion("جشن گیاه‌آوری", false)),
+        (2 to 3) to listOf(IranCalendarOccasion("جشن اردیبهشتگان و روز معمار", false)),
+        (2 to 22) to listOf(IranCalendarOccasion("زادروز خرم‌آباد", false)),
+        (2 to 28) to listOf(IranCalendarOccasion("روز بزرگداشت حکیم عمر خیام", false)),
+        (3 to 6) to listOf(IranCalendarOccasion("جشن خردادگان", false)),
+        (3 to 20) to listOf(IranCalendarOccasion("روز صنایع دستی و روز ملی فرش", false)),
+        (3 to 25) to listOf(IranCalendarOccasion("روز ملی گل و گیاه", false)),
+        (3 to 31) to listOf(IranCalendarOccasion("سالروز زلزله رودبار و منجیل", false)),
+        (4 to 7) to listOf(IranCalendarOccasion("روز قوه قضاییه", false)),
+        (4 to 10) to listOf(IranCalendarOccasion("روز صنعت و معدن", false)),
+        (4 to 13) to listOf(IranCalendarOccasion("جشن تیرگان", false)),
+        (4 to 14) to listOf(IranCalendarOccasion("روز قلم", false)),
+        (4 to 22) to listOf(IranCalendarOccasion("روز فناوری اطلاعات", false)),
+        (4 to 25) to listOf(IranCalendarOccasion("روز بهزیستی و تأمین اجتماعی", false)),
+        (5 to 17) to listOf(IranCalendarOccasion("روز خبرنگار", false)),
+        (6 to 1) to listOf(IranCalendarOccasion("روز پزشک", false)),
+        (6 to 5) to listOf(IranCalendarOccasion("روز داروساز", false)),
+        (6 to 10) to listOf(IranCalendarOccasion("روز بانکداری اسلامی", false)),
+        (6 to 11) to listOf(IranCalendarOccasion("روز پرستار", false)),
+        (6 to 12) to listOf(IranCalendarOccasion("روز مددکار اجتماعی", false)),
+        (6 to 21) to listOf(IranCalendarOccasion("روز سینمای ایران", false)),
+        (6 to 27) to listOf(IranCalendarOccasion("روز شعر و ادب فارسی و بزرگداشت شهریار", false)),
+        (6 to 31) to listOf(IranCalendarOccasion("آغاز هفته دفاع مقدس", false)),
+        (7 to 5) to listOf(IranCalendarOccasion("روز گردشگری", false)),
+        (7 to 7) to listOf(IranCalendarOccasion("روز آتش‌نشانی و ایمنی", false)),
+        (7 to 8) to listOf(IranCalendarOccasion("روز بزرگداشت شمس تبریزی و مولوی", false)),
+        (7 to 10) to listOf(IranCalendarOccasion("جشن مهرگان", false)),
+        (7 to 14) to listOf(IranCalendarOccasion("روز تهران", false)),
+        (7 to 15) to listOf(IranCalendarOccasion("روز روستا و عشایر", false)),
+        (7 to 20) to listOf(IranCalendarOccasion("روز بزرگداشت حافظ", false)),
+        (7 to 22) to listOf(IranCalendarOccasion("روز ملی کوهنوردی", false)),
+        (7 to 28) to listOf(IranCalendarOccasion("روز زعفران", false)),
+        (7 to 30) to listOf(IranCalendarOccasion("روز آمار و برنامه‌ریزی", false)),
+        (8 to 1) to listOf(IranCalendarOccasion("روز آبان", false), IranCalendarOccasion("روز آمار و برنامه‌ریزی", false)),
+        (8 to 5) to listOf(IranCalendarOccasion("روز زعفران", false)),
+        (8 to 7) to listOf(IranCalendarOccasion("روز انار", false)),
+        (8 to 8) to listOf(IranCalendarOccasion("روز نوجوان و بسیج دانش‌آموزی", false)),
+        (8 to 13) to listOf(IranCalendarOccasion("روز دانش‌آموز", false)),
+        (8 to 14) to listOf(IranCalendarOccasion("روز فرهنگ عمومی", false)),
+        (8 to 21) to listOf(IranCalendarOccasion("روز ملی هوافضا", false)),
+        (8 to 24) to listOf(IranCalendarOccasion("روز کتاب، کتابخوانی و کتابدار", false)),
+        (8 to 25) to listOf(IranCalendarOccasion("روز اصفهان", false)),
+        (8 to 30) to listOf(IranCalendarOccasion("روز حکمت و فلسفه و بزرگداشت فارابی", false)),
+        (9 to 1) to listOf(IranCalendarOccasion("جشن آذر", false)),
+        (9 to 9) to listOf(IranCalendarOccasion("جشن آذرگان", false)),
+        (9 to 10) to listOf(IranCalendarOccasion("روز مجلس", false)),
+        (9 to 15) to listOf(IranCalendarOccasion("روز حسابدار", false)),
+        (9 to 16) to listOf(IranCalendarOccasion("روز دانشجو", false)),
+        (9 to 18) to listOf(IranCalendarOccasion("روز ملی فناوری اطلاعات", false)),
+        (9 to 25) to listOf(IranCalendarOccasion("روز پژوهش و فناوری", false)),
+        (9 to 30) to listOf(IranCalendarOccasion("شب یلدا", false)),
+        (10 to 1) to listOf(IranCalendarOccasion("جشن خرم‌روز و نخستین جشن دیگان", false)),
+        (10 to 5) to listOf(IranCalendarOccasion("روز ایمنی در برابر زلزله", false)),
+        (10 to 12) to listOf(IranCalendarOccasion("روز رشت", false)),
+        (10 to 17) to listOf(IranCalendarOccasion("روز کرمان", false)),
+        (10 to 25) to listOf(IranCalendarOccasion("روز حمل‌ونقل و رانندگان", false)),
+        (10 to 26) to listOf(IranCalendarOccasion("روز آواها و نواهای ایرانی", false)),
+        (10 to 29) to listOf(IranCalendarOccasion("روز غزه", false)),
+        (11 to 2) to listOf(IranCalendarOccasion("جشن بهمنگان و روز ارومیه", false)),
+        (11 to 5) to listOf(IranCalendarOccasion("جشن نوسره", false)),
+        (11 to 8) to listOf(IranCalendarOccasion("جشن سده", false)),
+        (11 to 15) to listOf(IranCalendarOccasion("جشن میانه زمستان", false)),
+        (11 to 20) to listOf(IranCalendarOccasion("روز چهارمحال و بختیاری", false)),
+        (11 to 21) to listOf(IranCalendarOccasion("جشن سپندارمذگان و بزرگداشت خواجه نصیرالدین طوسی", false)),
+        (11 to 25) to listOf(IranCalendarOccasion("روز بزرگداشت خواجوی کرمانی", false)),
+        (12 to 5) to listOf(IranCalendarOccasion("جشن اسفندگان و روز بزرگداشت زن و زمین", false)),
+        (12 to 18) to listOf(IranCalendarOccasion("روز بزرگداشت حکیم نظامی گنجوی", false)),
+        (12 to 21) to listOf(IranCalendarOccasion("روز بزرگداشت پروین اعتصامی", false))
+    )
+
+    private val year1406Additional = mapOf(
+        (1 to 7) to listOf(IranCalendarOccasion("روز هنرهای نمایشی", false)),
+        (1 to 23) to listOf(IranCalendarOccasion("روز دندانپزشک", false)),
+        (2 to 5) to listOf(IranCalendarOccasion("سالروز حادثه طبس", false)),
+        (2 to 22) to listOf(IranCalendarOccasion("روز خرم‌آباد", false)),
+        (2 to 28) to listOf(IranCalendarOccasion("روز بزرگداشت حکیم عمر خیام", false)),
+        (3 to 1) to listOf(IranCalendarOccasion("روز لرستان", false)),
+        (3 to 20) to listOf(IranCalendarOccasion("روز صنایع دستی و روز ملی فرش", false)),
+        (3 to 25) to listOf(IranCalendarOccasion("روز ملی گل و گیاه", false)),
+        (3 to 31) to listOf(IranCalendarOccasion("سالروز زلزله رودبار و منجیل", false)),
+        (4 to 1) to listOf(IranCalendarOccasion("روز اصناف", false)),
+        (4 to 10) to listOf(IranCalendarOccasion("روز ایلام", false)),
+        (4 to 13) to listOf(IranCalendarOccasion("جشن تیرگان", false)),
+        (4 to 14) to listOf(IranCalendarOccasion("روز قلم", false)),
+        (4 to 22) to listOf(IranCalendarOccasion("روز فناوری اطلاعات", false)),
+        (5 to 5) to listOf(IranCalendarOccasion("روز استان مرکزی و روز کرمانشاه", false)),
+        (5 to 17) to listOf(IranCalendarOccasion("روز خبرنگار", false)),
+        (6 to 26) to listOf(IranCalendarOccasion("روز خوزستان", false)),
+        (7 to 5) to listOf(IranCalendarOccasion("روز گردشگری", false)),
+        (7 to 14) to listOf(IranCalendarOccasion("روز دامپزشکی", false)),
+        (7 to 22) to listOf(IranCalendarOccasion("روز ملی کوهنورد", false)),
+        (8 to 1) to listOf(IranCalendarOccasion("روز آبان و بزرگداشت ابوالفضل بیهقی", false)),
+        (8 to 5) to listOf(IranCalendarOccasion("روز زعفران", false)),
+        (8 to 7) to listOf(IranCalendarOccasion("روز انار", false)),
+        (8 to 21) to listOf(IranCalendarOccasion("روز ملی هوافضا", false)),
+        (8 to 25) to listOf(IranCalendarOccasion("روز اصفهان", false)),
+        (8 to 30) to listOf(IranCalendarOccasion("روز حکمت و فلسفه و بزرگداشت فارابی", false)),
+        (9 to 9) to listOf(IranCalendarOccasion("روز جزایر سه‌گانه خلیج فارس", false)),
+        (9 to 10) to listOf(IranCalendarOccasion("روز مجلس", false)),
+        (9 to 18) to listOf(IranCalendarOccasion("روز ملی فناوری اطلاعات", false)),
+        (9 to 30) to listOf(IranCalendarOccasion("شب یلدا", false)),
+        (10 to 1) to listOf(IranCalendarOccasion("جشن خرم‌روز و نخستین جشن دیگان", false)),
+        (10 to 5) to listOf(IranCalendarOccasion("روز ایمنی در برابر زلزله", false)),
+        (10 to 12) to listOf(IranCalendarOccasion("روز رشت", false)),
+        (10 to 17) to listOf(IranCalendarOccasion("روز کرمان", false)),
+        (10 to 25) to listOf(IranCalendarOccasion("روز حمل‌ونقل و رانندگان", false)),
+        (10 to 26) to listOf(IranCalendarOccasion("روز آواها و نواهای ایرانی", false)),
+        (11 to 2) to listOf(IranCalendarOccasion("جشن بهمنگان و روز ارومیه", false)),
+        (11 to 8) to listOf(IranCalendarOccasion("جشن سده", false)),
+        (11 to 21) to listOf(IranCalendarOccasion("جشن سپندارمذگان و بزرگداشت خواجه نصیرالدین طوسی", false)),
+        (11 to 25) to listOf(IranCalendarOccasion("روز بزرگداشت خواجوی کرمانی", false)),
+        (12 to 5) to listOf(IranCalendarOccasion("جشن اسفندگان", false)),
+        (12 to 18) to listOf(IranCalendarOccasion("روز بزرگداشت حکیم نظامی گنجوی", false)),
+        (12 to 21) to listOf(IranCalendarOccasion("روز بزرگداشت پروین اعتصامی", false))
+    )
+
     fun forDate(year: Int, month: Int, day: Int): List<IranCalendarOccasion> =
         when (year) {
-            1405 -> year1405[month to day].orEmpty()
-            1406 -> year1406[month to day].orEmpty()
+            1405 -> year1405[month to day].orEmpty() + year1405Additional[month to day].orEmpty()
+            1406 -> year1406[month to day].orEmpty() + year1406Additional[month to day].orEmpty()
             else -> emptyList()
         }
 
     fun forMonth(year: Int, month: Int): List<Pair<Int, IranCalendarOccasion>> {
         val source = when (year) {
-            1405 -> year1405
-            1406 -> year1406
+            1405 -> (year1405.keys + year1405Additional.keys).associateWith { key -> year1405[key].orEmpty() + year1405Additional[key].orEmpty() }
+            1406 -> (year1406.keys + year1406Additional.keys).associateWith { key -> year1406[key].orEmpty() + year1406Additional[key].orEmpty() }
             else -> emptyMap()
         }
         return source.entries
