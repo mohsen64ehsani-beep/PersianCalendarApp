@@ -55,6 +55,18 @@ fun DaynegarToolsPage(accent: Color) {
     var note by remember(todayKey) { mutableStateOf(prefs.getString("note_$todayKey", "") ?: "") }
     var feedback by remember { mutableStateOf("") }
     var compassAzimuth by remember { mutableFloatStateOf(0f) }
+    val qiblaCities = remember {
+        listOf(
+            Triple("تهران", 35.6892, 51.3890), Triple("مشهد", 36.2972, 59.6067),
+            Triple("اصفهان", 32.6546, 51.6680), Triple("شیراز", 29.5918, 52.5837),
+            Triple("تبریز", 38.0962, 46.2738), Triple("اهواز", 31.3183, 48.6706),
+            Triple("قم", 34.6416, 50.8746), Triple("کرمان", 30.2839, 57.0834),
+            Triple("رشت", 37.2808, 49.5832), Triple("یزد", 31.8974, 54.3569),
+            Triple("کرج", 35.8400, 50.9391), Triple("زاهدان", 29.4963, 60.8629)
+        )
+    }
+    var qiblaCity by remember { mutableStateOf("تهران") }
+    var qiblaCityMenu by remember { mutableStateOf(false) }
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     DisposableEffect(sensorManager) {
         val sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -144,8 +156,9 @@ fun DaynegarToolsPage(accent: Color) {
             }.format(Date(now))
         }
     }
-    val qiblaBearing = remember {
-        val lat1 = Math.toRadians(35.6892); val lon1 = Math.toRadians(51.3890)
+    val qiblaBearing = remember(qiblaCity) {
+        val city = qiblaCities.firstOrNull { it.first == qiblaCity } ?: qiblaCities.first()
+        val lat1 = Math.toRadians(city.second); val lon1 = Math.toRadians(city.third)
         val lat2 = Math.toRadians(21.4225); val lon2 = Math.toRadians(39.8262)
         val y = kotlin.math.sin(lon2 - lon1)
         val x = kotlin.math.cos(lat1) * kotlin.math.tan(lat2) - kotlin.math.sin(lat1) * kotlin.math.cos(lon2 - lon1)
@@ -184,9 +197,34 @@ fun DaynegarToolsPage(accent: Color) {
             Text(todayHijri, color = accent, fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Text("ممکن است با اعلام رؤیت هلال در ایران یک روز اختلاف داشته باشد.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
         }
-        ToolCard(accent, "جهت قبله", "زاویه محاسباتی از شمال حقیقی برای شهر تهران", Icons.Default.Explore) {
-            Text("${qiblaBearing}°", color = accent, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
-            Text("برای جهت دقیق در محل خود، موقعیت جغرافیایی و قطب‌نمای گوشی باید در نسخه بعدی فعال شود.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+        ToolCard(accent, "جهت قبله", "محاسبه جهت کعبه با توجه به شهر انتخابی و قطب‌نمای گوشی", Icons.Default.Explore) {
+            Box {
+                OutlinedButton(onClick = { qiblaCityMenu = true }) {
+                    Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(17.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("شهر مبنا: $qiblaCity")
+                    Icon(Icons.Default.ExpandMore, null)
+                }
+                DropdownMenu(expanded = qiblaCityMenu, onDismissRequest = { qiblaCityMenu = false }) {
+                    qiblaCities.forEach { city ->
+                        DropdownMenuItem(text = { Text(city.first) }, onClick = {
+                            qiblaCity = city.first
+                            qiblaCityMenu = false
+                        })
+                    }
+                }
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                Box(Modifier.size(88.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(24.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Navigation, null, tint = accent, modifier = Modifier.size(54.dp).rotate(qiblaBearing - compassAzimuth))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("$qiblaBearing°", color = accent, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("زاویه از شمال", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                    Text("جهت گوشی: ${compassAzimuth.toInt()}°", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                }
+            }
+            Text("برای دقت بهتر، گوشی را دور از آهن‌ربا و وسایل الکترونیکی نگه دار و قطب‌نما را با حرکت هشت انگلیسی کالیبره کن.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
         }
         ToolCard(accent, "ساعت شهرهای جهان", "زمان هم‌زمان در چند منطقه زمانی", Icons.Default.Public) {
             worldTimes.chunked(2).forEach { row ->
