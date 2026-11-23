@@ -65,9 +65,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun DaynegarSplash() {
-    val progress by animateFloatAsState(1f, animationSpec = tween(1850), label = "splashProgress")
+    var progressTarget by remember { mutableStateOf(0f) }
+    val progress by animateFloatAsState(progressTarget, animationSpec = tween(1850), label = "splashProgress")
     val glow = remember { androidx.compose.animation.core.Animatable(0.82f) }
     LaunchedEffect(Unit) {
+        progressTarget = 1f
         glow.animateTo(1f, androidx.compose.animation.core.infiniteRepeatable(
             animation = tween(900), repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
         ))
@@ -415,7 +417,7 @@ private fun CalendarHome(accent: Color) {
                             val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
                             val isFriday = columnIndex == 6
                             val redDay = isFriday || isHoliday
-                            Box(Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f).then(if (isSelected) Modifier.background(accent, CircleShape) else Modifier)
+                            Box(Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f).then(if (isSelected) Modifier.background(if (redDay) Color(0xFFD13F50) else accent, CircleShape) else Modifier)
                                 .clickable(enabled = value != 0) { selectedDay = value }, contentAlignment = Alignment.Center) {
                                 if (value != 0) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -701,7 +703,7 @@ private fun PersianMonthMenu(selected: Int, onSelect: (Int) -> Unit, accent: Col
             Text(MonthNames[selected - 1], maxLines = 1)
             Text("⌄", modifier = Modifier.padding(start = 3.dp))
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, shape = RoundedCornerShape(16.dp), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
             MonthNames.forEachIndexed { index, month ->
                 DropdownMenuItem(text = { Text(month) }, onClick = { onSelect(index + 1); expanded = false })
             }
@@ -893,7 +895,7 @@ private fun PrayerTimesPage(accent: Color) {
                     OutlinedButton(onClick = { cityMenu = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp)) {
                         Text(city.name, modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Text("⌄")
                     }
-                    DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
+                    DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }, shape = RoundedCornerShape(16.dp), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
                         IranianCities.forEachIndexed { index, item ->
                             DropdownMenuItem(text = { Text(item.name) }, onClick = { cityIndex = index; prayerPrefs.edit().putInt("city_index", index).apply(); cityMenu = false })
                         }
@@ -904,7 +906,7 @@ private fun PrayerTimesPage(accent: Color) {
                     OutlinedButton(onClick = { methodMenu = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp)) {
                         Text(methodNames[methodIndex], modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Text("⌄")
                     }
-                    DropdownMenu(expanded = methodMenu, onDismissRequest = { methodMenu = false }) {
+                    DropdownMenu(expanded = methodMenu, onDismissRequest = { methodMenu = false }, shape = RoundedCornerShape(16.dp), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
                         methodNames.forEachIndexed { index, item ->
                             DropdownMenuItem(text = { Text(item) }, onClick = { methodIndex = index; prayerPrefs.edit().putInt("method_index", index).apply(); methodMenu = false })
                         }
