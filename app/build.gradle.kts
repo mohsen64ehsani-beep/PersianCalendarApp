@@ -74,7 +74,8 @@ val downloadCc0Adhan by tasks.registering {
         val output = audioFile.asFile
         output.parentFile.mkdirs()
         if (!output.exists()) {
-            val connection = URL("https://upload.wikimedia.org/wikipedia/commons/e/e7/Adhan.ogg").openConnection()
+            val connection = URL("https://upload.wikimedia.org/wikipedia/commons/e/e7/Adhan.ogg?download=1").openConnection()
+            connection.setRequestProperty("User-Agent", "PersianCalendarAppBuild/1.0 (https://github.com/mohsen64ehsani-beep/PersianCalendarApp)")
             connection.connectTimeout = 20000
             connection.readTimeout = 30000
             connection.getInputStream().use { input ->
