@@ -1151,16 +1151,22 @@ private fun SettingsPage(
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("پالت رنگی برنامه", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                 Text("با انتخاب هر رنگ، اجزای اصلی برنامه هماهنگ تغییر می‌کنند.", color = Muted, fontSize = 11.sp)
-                names.forEachIndexed { index, name ->
-                    Row(Modifier.fillMaxWidth().clickable { onTheme(index) }.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(34.dp).background(Brush.linearGradient(listOf(palette[index], palette[index].copy(alpha = .55f))), RoundedCornerShape(12.dp)))
-                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                            Text(name, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            Text(if (themeIndex == index) "انتخاب‌شده" else "برای اعمال لمس کن", color = Muted, fontSize = 10.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    palette.forEachIndexed { index, color ->
+                        Box(
+                            Modifier.size(46.dp).clip(CircleShape)
+                                .border(if (themeIndex == index) 2.dp else 1.dp, if (themeIndex == index) color else MaterialTheme.colorScheme.outline, CircleShape)
+                                .clickable { onTheme(index) }.padding(5.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(Modifier.fillMaxSize().background(color, CircleShape), contentAlignment = Alignment.Center) {
+                                if (themeIndex == index) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            }
                         }
-                        RadioButton(selected = themeIndex == index, onClick = { onTheme(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
                     }
                 }
+                Text(names[themeIndex], color = accent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text("پالت انتخاب‌شده در سراسر برنامه هماهنگ اعمال می‌شود.", color = Muted, fontSize = 10.sp)
             }
         }
         Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(23.dp)) {
