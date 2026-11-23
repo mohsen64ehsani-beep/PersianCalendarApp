@@ -67,6 +67,9 @@ object IranCalendarEvents {
         (12 to 29) to listOf(IranCalendarOccasion("روز ملی شدن صنعت نفت ایران", true))
     )
 
+    // Year 1406 event dates are curated from the published annual listing.
+    // Lunar occasions must be checked against the final official calendar before release.
+    // Reference listing: https://timestamp.ir/events-list/1406
     private val year1406 = mapOf(
         (1 to 1) to listOf(IranCalendarOccasion("عید نوروز و آغاز سال نو", true)),
         (1 to 2) to listOf(IranCalendarOccasion("تعطیلات عید نوروز", true)),
