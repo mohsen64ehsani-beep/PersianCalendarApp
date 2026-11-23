@@ -1,6 +1,11 @@
 package ir.persiancalendar.app
 
 import android.os.Bundle
+import com.batoulapps.adhan.CalculationMethod
+import com.batoulapps.adhan.Coordinates
+import com.batoulapps.adhan.DateComponents
+import com.batoulapps.adhan.Madhab
+import com.batoulapps.adhan.PrayerTimes
 import android.icu.util.Calendar
 import android.icu.util.ULocale
 import android.icu.util.GregorianCalendar
@@ -95,7 +100,7 @@ private fun PersianCalendarApp() {
                 when (selectedTab) {
                     0 -> CalendarHome(accent)
                     1 -> DateConverter(accent)
-                    2 -> IranClockPage(accent)
+                    2 -> PrayerTimesPage(accent)
                     else -> SettingsPage(themeIndex, { themeIndex = it; preferences.edit().putInt("theme", it).apply() }, darkMode, { darkMode = it; preferences.edit().putBoolean("dark_mode", it).apply() }, fontChoice, { fontChoice = it; preferences.edit().putInt("font_choice", it).apply() }, accent)
                 }
             }
@@ -438,19 +443,116 @@ private fun DateConverter(accent: Color) {
 private fun DateField(label:String,value:String,onValue:(String)->Unit,modifier:Modifier=Modifier){
     OutlinedTextField(value=value,onValueChange={onValue(it.filter{ch->ch.isDigit() || ch in '۰'..'۹'}.take(4))},label={Text(label)},modifier=modifier,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
 }
+private data class IranianCity(val name: String, val latitude: Double, val longitude: Double)
+private val IranianCities = listOf(
+    IranianCity("تهران", 35.6892, 51.3890),
+    IranianCity("مشهد", 36.2605, 59.6168),
+    IranianCity("اصفهان", 32.6546, 51.6680),
+    IranianCity("شیراز", 29.5918, 52.5837),
+    IranianCity("تبریز", 38.0962, 46.2738),
+    IranianCity("اهواز", 31.3183, 48.6706),
+    IranianCity("قم", 34.6416, 50.8746),
+    IranianCity("کرمان", 30.2839, 57.0834),
+    IranianCity("رشت", 37.2808, 49.5832),
+    IranianCity("یزد", 31.8974, 54.3569)
+)
+
 @Composable
-private fun IranClockPage(accent: Color){
-    var now by remember{mutableLongStateOf(System.currentTimeMillis())}
-    LaunchedEffect(Unit){while(true){now=System.currentTimeMillis();kotlinx.coroutines.delay(1000)}}
-    val time=remember(now){SimpleDateFormat("HH:mm:ss",Locale("fa","IR")).apply{timeZone=java.util.TimeZone.getTimeZone("Asia/Tehran")}.format(java.util.Date(now))}
-    val date=remember(now){val c=persianCalendar().apply{timeInMillis=now};faNumber(c.get(Calendar.DAY_OF_MONTH))+" "+MonthNames[c.get(Calendar.MONTH)]+" "+faNumber(c.get(Calendar.YEAR))}
-    Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally){
-        Text("ساعت رسمی ایران",color=Muted,fontSize=16.sp); Spacer(Modifier.height(12.dp))
-        Text(time,color=accent,fontSize=46.sp,fontWeight=FontWeight.Bold); Text(date,color=Ink,fontSize=20.sp,fontWeight=FontWeight.SemiBold)
-        Spacer(Modifier.height(14.dp)); Text("منطقه زمانی Asia/Tehran",color=Muted,fontSize=12.sp)
-        Text("محاسبه اوقات شرعی و اذان در حال توسعه است.",color=Muted,fontSize=12.sp)
+private fun PrayerTimesPage(accent: Color) {
+    var cityIndex by remember { mutableIntStateOf(0) }
+    var methodIndex by remember { mutableIntStateOf(0) }
+    var cityMenu by remember { mutableStateOf(false) }
+    var methodMenu by remember { mutableStateOf(false) }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) { now = System.currentTimeMillis(); kotlinx.coroutines.delay(60_000) }
+    }
+    val city = IranianCities[cityIndex]
+    val methodNames = listOf("کراچی", "مسلمانان جهان", "مصر")
+    val prayerData = remember(now, cityIndex, methodIndex) {
+        runCatching {
+            val zone = java.util.TimeZone.getTimeZone("Asia/Tehran")
+            val localCalendar = GregorianCalendar(zone).apply { timeInMillis = now }
+            val date = DateComponents(localCalendar.get(Calendar.YEAR), localCalendar.get(Calendar.MONTH) + 1, localCalendar.get(Calendar.DAY_OF_MONTH))
+            val coordinates = Coordinates(city.latitude, city.longitude)
+            val params = when (methodIndex) {
+                1 -> CalculationMethod.MUSLIM_WORLD_LEAGUE.getParameters()
+                2 -> CalculationMethod.EGYPTIAN.getParameters()
+                else -> CalculationMethod.KARACHI.getParameters()
+            }
+            params.madhab = Madhab.SHAFI
+            val times = PrayerTimes(coordinates, date, params)
+            val formatter = SimpleDateFormat("HH:mm", Locale("fa", "IR")).apply { timeZone = zone }
+            listOf(
+                "اذان صبح" to times.fajr,
+                "طلوع آفتاب" to times.sunrise,
+                "اذان ظهر" to times.dhuhr,
+                "اذان عصر" to times.asr,
+                "اذان مغرب" to times.maghrib,
+                "اذان عشا" to times.isha
+            ).map { it.first to formatter.format(it.second) }
+        }.getOrElse { emptyList() }
+    }
+    val dateLabel = remember(now) {
+        val c = persianCalendar().apply { timeInMillis = now }
+        faNumber(c.get(Calendar.DAY_OF_MONTH)) + " " + MonthNames[c.get(Calendar.MONTH)] + " " + faNumber(c.get(Calendar.YEAR))
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text("اوقات شرعی", color = Ink, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+        Text(dateLabel + " · ساعت رسمی ایران", color = Muted, fontSize = 13.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = accent), shape = RoundedCornerShape(24.dp)) {
+            Column(Modifier.fillMaxWidth().padding(18.dp)) {
+                Text(city.name, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("زمان‌های محاسبه‌شده برای امروز", color = Color.White.copy(alpha = .82f), fontSize = 12.sp)
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(20.dp)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("انتخاب شهر", color = Ink, fontWeight = FontWeight.Bold)
+                Box {
+                    OutlinedButton(onClick = { cityMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(city.name, modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
+                        Text("⌄")
+                    }
+                    DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
+                        IranianCities.forEachIndexed { index, item ->
+                            DropdownMenuItem(text = { Text(item.name) }, onClick = { cityIndex = index; cityMenu = false })
+                        }
+                    }
+                }
+                Text("روش محاسبه", color = Ink, fontWeight = FontWeight.Bold)
+                Box {
+                    OutlinedButton(onClick = { methodMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(methodNames[methodIndex], modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
+                        Text("⌄")
+                    }
+                    DropdownMenu(expanded = methodMenu, onDismissRequest = { methodMenu = false }) {
+                        methodNames.forEachIndexed { index, item ->
+                            DropdownMenuItem(text = { Text(item) }, onClick = { methodIndex = index; methodMenu = false })
+                        }
+                    }
+                }
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(20.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                if (prayerData.isEmpty()) {
+                    Text("برای این موقعیت امکان محاسبه زمان‌ها وجود ندارد.", color = Muted, modifier = Modifier.padding(12.dp))
+                } else {
+                    prayerData.forEachIndexed { index, pair ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(pair.first, Modifier.weight(1f), color = Ink, fontWeight = FontWeight.Medium)
+                            Text(pair.second, color = accent, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+                        if (index != prayerData.lastIndex) HorizontalDivider(color = Muted.copy(alpha = .16f))
+                    }
+                }
+            }
+        }
+        Text("زمان‌ها به‌صورت آفلاین و بر اساس مختصات شهر و روش انتخابی محاسبه می‌شوند. برای تطبیق با تقویم رسمی اوقات شرعی ایران، روش و اختلاف دقیقه‌ای باید در تنظیمات قابل تنظیم و با منبع معتبر بررسی شود.", color = Muted, fontSize = 11.sp)
     }
 }
+
 @Composable
 private fun SettingsPage(
     themeIndex: Int,
