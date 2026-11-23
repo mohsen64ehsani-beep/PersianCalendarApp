@@ -775,7 +775,7 @@ private fun SettingsPage(
                 }
             }
         }
-        Text("روزنگار · نسخه ۰٫۹٫۰", color = Muted, fontSize = 11.sp)
+        Text("روزنگار · نسخه ۱٫۰٫۰", color = Muted, fontSize = 11.sp)
     }
 }
 
