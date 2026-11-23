@@ -78,7 +78,7 @@ private fun PersianCalendarApp() {
     val preferences = remember { context.getSharedPreferences("daynegar", 0) }
     var themeIndex by remember { mutableIntStateOf(preferences.getInt("theme", 0).coerceIn(0, 4)) }
     var darkMode by remember { mutableStateOf(preferences.getBoolean("dark_mode", false)) }
-    var fontChoice by remember { mutableIntStateOf(preferences.getInt("font_choice", 0).coerceIn(0, 2)) }
+    var fontChoice by remember { mutableIntStateOf(preferences.getInt("font_choice", 0).coerceIn(0, 3)) }
     val accent = listOf(Purple, Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))[themeIndex]
     val palette = if (darkMode) DayPalette(Color(0xFFF1EFF8), Color(0xFFB8B4C7), Color(0xFF15141B), Color(0xFF24222D))
         else DayPalette(Color(0xFF202033), Color(0xFF77778A), Color(0xFFF6F4FA), Color.White)
@@ -86,7 +86,15 @@ private fun PersianCalendarApp() {
         background = palette.canvas, surface = palette.surface, onBackground = palette.ink, onSurface = palette.ink)
         else lightColorScheme(primary = accent, secondary = accent, tertiary = accent,
         background = palette.canvas, surface = palette.surface, onBackground = palette.ink, onSurface = palette.ink)
-    val selectedFont = when (fontChoice) { 1 -> androidx.compose.ui.text.font.FontFamily.Serif; 2 -> androidx.compose.ui.text.font.FontFamily.Monospace; else -> androidx.compose.ui.text.font.FontFamily.SansSerif }
+    val selectedFont = when (fontChoice) {
+        1 -> androidx.compose.ui.text.font.FontFamily(
+            androidx.compose.ui.text.font.Font(R.font.vazirmatn_regular, FontWeight.Normal),
+            androidx.compose.ui.text.font.Font(R.font.vazirmatn_bold, FontWeight.Bold)
+        )
+        2 -> androidx.compose.ui.text.font.FontFamily.Serif
+        3 -> androidx.compose.ui.text.font.FontFamily.Monospace
+        else -> androidx.compose.ui.text.font.FontFamily.SansSerif
+    }
     CompositionLocalProvider(LocalDayPalette provides palette, androidx.compose.material3.LocalContentColor provides palette.ink) {
     MaterialTheme(colorScheme = colors) {
         CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
@@ -758,8 +766,8 @@ private fun SettingsPage(
         Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
             Column(Modifier.padding(16.dp)) {
                 Text("فونت رابط کاربری", color = Ink, fontWeight = FontWeight.Bold)
-                Text("انتخاب فونت‌های پایه دستگاه؛ بسته فونت‌های فارسی مجاز در مرحله بعد افزوده می‌شود.", color = Muted, fontSize = 11.sp)
-                listOf("ساده", "سریف", "تک‌فاصله").forEachIndexed { index, label ->
+                Text("فونت وزیرمتن همراه برنامه است؛ گزینه‌های دیگر از فونت‌های پایه دستگاه استفاده می‌کنند.", color = Muted, fontSize = 11.sp)
+                listOf("سیستم", "وزیرمتن", "سریف", "تک‌فاصله").forEachIndexed { index, label ->
                     Row(Modifier.fillMaxWidth().clickable { onFont(index) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(label, Modifier.weight(1f), color = Ink)
                         RadioButton(selected = fontChoice == index, onClick = { onFont(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
