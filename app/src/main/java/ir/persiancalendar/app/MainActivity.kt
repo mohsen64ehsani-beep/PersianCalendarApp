@@ -237,10 +237,11 @@ private fun CalendarHome(accent: Color) {
     var showAddEvent by remember { mutableStateOf(false) }
     var eventTitle by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf("09:00") }
-    var pendingReminder by remember { mutableStateOf<Triple<Int, String, Long>?>(null) }
+    var pendingReminder by remember { mutableStateOf<Pair<Triple<Int, String, Long>, Boolean>?>(null) }
+    var repeatDaily by remember { mutableStateOf(false) }
     val reminderPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         val pending = pendingReminder
-        if (granted && pending != null) EventReminderScheduler.schedule(context, pending.first, pending.second, pending.third)
+        if (granted && pending != null) EventReminderScheduler.schedule(context, pending.first.first, pending.first.second, pending.first.third, repeatDaily = pending.second)
         pendingReminder = null
     }
 
@@ -496,7 +497,7 @@ private fun CalendarHome(accent: Color) {
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { eventTitle = ""; reminderTime = "09:00"; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
+            TextButton(onClick = { eventTitle = ""; reminderTime = "09:00"; repeatDaily = false; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
         }
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
             if (events.isEmpty()) {
@@ -536,7 +537,11 @@ private fun CalendarHome(accent: Color) {
                             label = { Text("ساعت یادآوری (مثلاً 09:30)") },
                             singleLine = true
                         )
-                        Text("با ذخیره رویداد، در صورت مجاز بودن اعلان‌ها، یادآوری در ساعت انتخاب‌شده تنظیم می‌شود.", color = Muted, fontSize = 11.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = repeatDaily, onCheckedChange = { repeatDaily = it })
+                            Text("تکرار روزانه یادآور", color = Ink, fontSize = 12.sp)
+                        }
+                        Text("می‌توانی یادآور را برای هر روز تکرار کنی؛ اعلان‌ها باید در گوشی مجاز باشند.", color = Muted, fontSize = 11.sp)
                     }
                 },
                 confirmButton = {
@@ -556,10 +561,10 @@ private fun CalendarHome(accent: Color) {
                                 if (alarmDate > System.currentTimeMillis()) {
                                     val reminderId = (eventKey + "-" + title).hashCode()
                                     if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                        pendingReminder = Triple(reminderId, title, alarmDate)
+                                        pendingReminder = Triple(reminderId, title, alarmDate) to repeatDaily
                                         reminderPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                                     } else {
-                                        EventReminderScheduler.schedule(context, reminderId, title, alarmDate)
+                                        EventReminderScheduler.schedule(context, reminderId, title, alarmDate, repeatDaily = repeatDaily)
                                     }
                                 }
                             }
