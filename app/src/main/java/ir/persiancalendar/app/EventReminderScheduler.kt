@@ -1,0 +1,93 @@
+package ir.persiancalendar.app
+
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+
+object EventReminderScheduler {
+    private const val CHANNEL_ID = "daynegar_reminders"
+    private const val PREFS = "daynegar_reminders"
+
+    fun schedule(context: Context, id: Int, title: String, triggerAtMillis: Long) {
+        if (triggerAtMillis <= System.currentTimeMillis()) return
+        val intent = Intent(context, EventReminderReceiver::class.java).apply {
+            putExtra("reminder_id", id)
+            putExtra("reminder_title", title)
+        }
+        val pending = PendingIntent.getBroadcast(
+            context, id, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pending)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString("reminder_$id", "$triggerAtMillis|$title").apply()
+    }
+
+    fun restoreAfterBoot(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        prefs.all.forEach { (key, value) ->
+            if (key.startsWith("reminder_") && value is String) {
+                val split = value.split("|", limit = 2)
+                val id = key.removePrefix("reminder_").toIntOrNull() ?: return@forEach
+                val time = split.firstOrNull()?.toLongOrNull() ?: return@forEach
+                val title = split.getOrNull(1) ?: "یادآور"
+                if (time > System.currentTimeMillis()) schedule(context, id, title, time)
+                else prefs.edit().remove(key).apply()
+            }
+        }
+    }
+
+    internal fun show(context: Context, id: Int, title: String) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            manager.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "یادآورهای روزنگار", NotificationManager.IMPORTANCE_HIGH)
+            )
+        }
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val contentIntent = launchIntent?.let {
+            PendingIntent.getActivity(context, id, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle("یادآور روزنگار")
+            .setContentText(title)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(title))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(contentIntent)
+            .build()
+        if (Build.VERSION.SDK_INT < 33 ||
+            context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            NotificationManagerCompat.from(context).notify(id, notification)
+        }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
+    }
+}
+
+class EventReminderReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        EventReminderScheduler.show(
+            context,
+            intent.getIntExtra("reminder_id", 0),
+            intent.getStringExtra("reminder_title") ?: "یادآور"
+        )
+    }
+}
+
+class ReminderBootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            EventReminderScheduler.restoreAfterBoot(context)
+        }
+    }
+}
