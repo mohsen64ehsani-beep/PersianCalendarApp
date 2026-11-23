@@ -841,22 +841,56 @@ private fun PrayerTimesPage(accent: Color) {
         val c = persianCalendar().apply { timeInMillis = now }
         faNumber(c.get(Calendar.DAY_OF_MONTH)) + " " + MonthNames[c.get(Calendar.MONTH)] + " " + faNumber(c.get(Calendar.YEAR))
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("اوقات شرعی", color = Ink, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
-        Text(dateLabel + " · ساعت رسمی ایران", color = Muted, fontSize = 13.sp)
-        Card(colors = CardDefaults.cardColors(containerColor = accent), shape = RoundedCornerShape(24.dp)) {
-            Column(Modifier.fillMaxWidth().padding(18.dp)) {
-                Text(city.name, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("زمان‌های محاسبه‌شده برای امروز", color = Color.White.copy(alpha = .82f), fontSize = 12.sp)
+    val nextPrayer = prayerMoments.firstOrNull { it.atMillis > now }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("اوقات شرعی", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
+            Text(dateLabel + " · محاسبه بر پایه موقعیت شهر انتخابی", color = Muted, fontSize = 12.sp)
+        }
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = accent)) {
+            Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(accent, accent.copy(alpha = .78f), Color(0xFF263653))), RoundedCornerShape(28.dp)).padding(20.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column {
+                            Text("اوقات شرعی امروز", color = Color.White.copy(alpha = .76f), fontSize = 11.sp)
+                            Text(city.name, color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                        Icon(Icons.Default.WbSunny, null, tint = Color.White, modifier = Modifier.size(34.dp))
+                    }
+                    HorizontalDivider(color = Color.White.copy(alpha = .22f))
+                    Text(if (nextPrayer != null) "نماز بعدی · " + nextPrayer.title else "برنامه امروز به پایان رسیده است", color = Color.White.copy(alpha = .82f), fontSize = 12.sp)
+                    Text(nextPrayer?.let { formatter.format(java.time.Instant.ofEpochMilli(it.atMillis).atOffset(ZoneOffset.ofHoursMinutes(3, 30))) } ?: "—", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                    Text("منطقه زمانی رسمی ایران · UTC+03:30", color = Color.White.copy(alpha = .7f), fontSize = 10.sp)
+                }
             }
         }
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(20.dp)) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("انتخاب شهر", color = Ink, fontWeight = FontWeight.Bold)
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp)) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("برنامه نمازهای امروز", Modifier.weight(1f), color = Ink, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("به وقت محلی", color = Muted, fontSize = 10.sp)
+                }
+                if (prayerData.isEmpty()) Text("برای این موقعیت امکان محاسبه زمان‌ها وجود ندارد.", color = Muted, modifier = Modifier.padding(12.dp))
+                else prayerData.forEachIndexed { index, pair ->
+                    val upcoming = prayerMoments.getOrNull(index)?.atMillis?.let { it > now } == true && prayerMoments.take(index).none { it.atMillis > now }
+                    Row(Modifier.fillMaxWidth().background(if (upcoming) accent.copy(alpha = .09f) else Color.Transparent, RoundedCornerShape(15.dp)).padding(horizontal = 12.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(36.dp).background(if (upcoming) accent.copy(alpha = .16f) else CanvasColor, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.WbSunny, null, tint = if (upcoming) accent else Muted, modifier = Modifier.size(18.dp))
+                        }
+                        Text(pair.first, Modifier.weight(1f).padding(start = 11.dp), color = Ink, fontWeight = if (upcoming) FontWeight.Bold else FontWeight.Medium, fontSize = 13.sp)
+                        Text(pair.second, color = if (upcoming) accent else Ink, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(24.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("تنظیمات محاسبه", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
+                Text("شهر و روش محاسبه را انتخاب کن تا زمان‌ها دقیق‌تر نمایش داده شوند.", color = Muted, fontSize = 11.sp)
+                Text("شهر محل سکونت", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Box {
-                    OutlinedButton(onClick = { cityMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(city.name, modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
-                        Text("⌄")
+                    OutlinedButton(onClick = { cityMenu = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp)) {
+                        Text(city.name, modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Text("⌄")
                     }
                     DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
                         IranianCities.forEachIndexed { index, item ->
@@ -864,11 +898,10 @@ private fun PrayerTimesPage(accent: Color) {
                         }
                     }
                 }
-                Text("روش محاسبه", color = Ink, fontWeight = FontWeight.Bold)
+                Text("روش محاسبه", color = Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Box {
-                    OutlinedButton(onClick = { methodMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(methodNames[methodIndex], modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
-                        Text("⌄")
+                    OutlinedButton(onClick = { methodMenu = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp)) {
+                        Text(methodNames[methodIndex], modifier = Modifier.weight(1f), textAlign = TextAlign.Start); Text("⌄")
                     }
                     DropdownMenu(expanded = methodMenu, onDismissRequest = { methodMenu = false }) {
                         methodNames.forEachIndexed { index, item ->
@@ -878,106 +911,115 @@ private fun PrayerTimesPage(accent: Color) {
                 }
             }
         }
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(20.dp)) {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                if (prayerData.isEmpty()) {
-                    Text("برای این موقعیت امکان محاسبه زمان‌ها وجود ندارد.", color = Muted, modifier = Modifier.padding(12.dp))
-                } else {
-                    prayerData.forEachIndexed { index, pair ->
-                        Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(pair.first, Modifier.weight(1f), color = Ink, fontWeight = FontWeight.Medium)
-                            Text(pair.second, color = accent, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        if (index != prayerData.lastIndex) HorizontalDivider(color = Muted.copy(alpha = .16f))
-                    }
-                }
-            }
+        Button(onClick = { schedulePrayerWeek() }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = accent)) {
+            Text("فعال‌سازی اعلان و اذان ۷ روز آینده", fontWeight = FontWeight.Bold)
         }
-        Button(onClick = { schedulePrayerWeek() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = accent)) {
-            Text("فعال‌سازی اعلان اوقات شرعی ۷ روز آینده")
-        }
-        if (scheduledPrayerReminderCount > 0) {
-            Text("${faNumber(scheduledPrayerReminderCount)} اعلان برای شهر ${city.name} تنظیم شد.", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        }
-        Button(onClick = {
+        if (scheduledPrayerReminderCount > 0) Text("${faNumber(scheduledPrayerReminderCount)} اعلان برای شهر ${city.name} تنظیم شد.", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        OutlinedButton(onClick = {
             val current = adhanPreviewPlayer
-            if (current?.isPlaying == true) {
-                current.stop()
-                current.release()
-                adhanPreviewPlayer = null
-            } else {
+            if (current?.isPlaying == true) { current.stop(); current.release(); adhanPreviewPlayer = null }
+            else {
                 val player = MediaPlayer.create(context, R.raw.adhan)
                 if (player != null) {
                     adhanPreviewPlayer = player
-                    player.setOnCompletionListener {
-                        it.release()
-                        adhanPreviewPlayer = null
-                    }
+                    player.setOnCompletionListener { it.release(); adhanPreviewPlayer = null }
                     player.start()
                 }
             }
-        }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
-            Text(if (adhanPreviewPlayer?.isPlaying == true) "توقف پخش اذان" else "پخش نمونه صدای اذان")
+        }, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) {
+            Text(if (adhanPreviewPlayer?.isPlaying == true) "توقف پخش اذان" else "شنیدن نمونه صدای اذان")
         }
-        Text("برای اعلان‌های نماز، فایل اذان دارای مجوز CC0 از کانال اعلان جداگانه پخش می‌شود. صدای کانال را می‌توان از تنظیمات اعلان Android کنترل کرد.", color = Muted, fontSize = 11.sp)
-        Text("روش تهران: فجر ۱۷٫۷°، مغرب ۴٫۵° و عشا ۱۴° زیر افق. اختلاف دقیقه‌ای ممکن است به‌دلیل مختصات و گردکردن با جدول محلی متفاوت باشد.", color = Muted, fontSize = 11.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = .08f)), shape = RoundedCornerShape(18.dp)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("درباره محاسبه", color = Ink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("روش تهران: فجر ۱۷٫۷°، مغرب ۴٫۵° و عشا ۱۴° زیر افق. اختلاف جزئی با جدول‌های محلی ممکن است به‌دلیل مختصات و گردکردن رخ دهد.", color = Muted, fontSize = 11.sp)
+                Text("صدای اذان در کانال اعلان مستقل Android پخش می‌شود و از تنظیمات اعلان گوشی قابل کنترل است.", color = Muted, fontSize = 11.sp)
+            }
+        }
     }
 }
 
 @Composable
 private fun SettingsPage(
-    themeIndex: Int,
-    onTheme: (Int) -> Unit,
-    darkMode: Boolean,
-    onDarkMode: (Boolean) -> Unit,
-    fontChoice: Int,
-    onFont: (Int) -> Unit,
-    accent: Color
+    themeIndex: Int, onTheme: (Int) -> Unit, darkMode: Boolean, onDarkMode: (Boolean) -> Unit,
+    fontChoice: Int, onFont: (Int) -> Unit, accent: Color
 ) {
     val palette = listOf(Color(0xFF7255C7), Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))
-    val names = listOf("بنفش سلطنتی", "آبی اقیانوسی", "سبز زمردی", "صورتی رزگلد", "مشکی و طلایی")
+    val names = listOf("بنفش سلطنتی", "آبی اقیانوسی", "سبز زمردی", "صورتی رزگلد", "کهربایی")
+    val fontNames = listOf("فونت سیستم", "وزیرمتن", "استعداد", "ساحل")
+    val fontSamples = listOf("نمونه نمایش متن فارسی", "روزنگار؛ همراه هر روز", "تقویم هوشمند زندگی", "لحظه‌ها را به خاطر بسپار")
     val surface = MaterialTheme.colorScheme.surface
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("شخصی‌سازی", color = Ink, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
-        Text("ظاهر روزنگار را مطابق سلیقه‌ات تنظیم کن.", color = Muted, fontSize = 13.sp)
-        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
-            Column(Modifier.padding(16.dp)) {
-                Text("رنگ‌بندی برنامه", color = Ink, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("تنظیمات روزنگار", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
+            Text("تجربه تقویم را مطابق سلیقه و نیازت شخصی‌سازی کن.", color = Muted, fontSize = 12.sp)
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = accent), shape = RoundedCornerShape(25.dp)) {
+            Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(50.dp).background(Color.White.copy(alpha = .16f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Settings, null, tint = Color.White, modifier = Modifier.size(27.dp))
+                }
+                Column(Modifier.padding(start = 12.dp)) {
+                    Text("ظاهر دلخواه شما", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+                    Text("رنگ، حالت شب و قلم برنامه", color = Color.White.copy(alpha = .78f), fontSize = 11.sp)
+                }
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(23.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("پالت رنگی برنامه", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                Text("با انتخاب هر رنگ، اجزای اصلی برنامه هماهنگ تغییر می‌کنند.", color = Muted, fontSize = 11.sp)
                 names.forEachIndexed { index, name ->
-                    Row(Modifier.fillMaxWidth().clickable { onTheme(index) }.padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(30.dp).background(palette[index], CircleShape))
-                        Text(name, Modifier.weight(1f).padding(start = 12.dp), color = Ink)
+                    Row(Modifier.fillMaxWidth().clickable { onTheme(index) }.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(34.dp).background(Brush.linearGradient(listOf(palette[index], palette[index].copy(alpha = .55f))), RoundedCornerShape(12.dp)))
+                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                            Text(name, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(if (themeIndex == index) "انتخاب‌شده" else "برای اعمال لمس کن", color = Muted, fontSize = 10.sp)
+                        }
                         RadioButton(selected = themeIndex == index, onClick = { onTheme(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
                     }
                 }
             }
         }
-        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
-            Column(Modifier.padding(16.dp)) {
-                Text("حالت نمایش", color = Ink, fontWeight = FontWeight.Bold)
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("حالت تاریک", color = Ink)
-                        Text("زمینه تیره برای استفاده در شب", color = Muted, fontSize = 11.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(23.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("حالت نمایش", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(40.dp).background(accent.copy(alpha = .10f), RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) { Icon(Icons.Default.WbSunny, null, tint = accent) }
+                    Column(Modifier.weight(1f).padding(start = 11.dp)) {
+                        Text("حالت تاریک", color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Text("زمینه تیره برای استفاده در شب", color = Muted, fontSize = 10.sp)
                     }
                     Switch(checked = darkMode, onCheckedChange = onDarkMode)
                 }
             }
         }
-        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(22.dp)) {
-            Column(Modifier.padding(16.dp)) {
-                Text("فونت رابط کاربری", color = Ink, fontWeight = FontWeight.Bold)
-                Text("سه خانواده فونت فارسی با شخصیت بصری متفاوت، به‌صورت آفلاین همراه برنامه.", color = Muted, fontSize = 11.sp)
-                listOf("سیستم", "وزیرمتن", "استعداد", "ساحل").forEachIndexed { index, label ->
-                    Row(Modifier.fillMaxWidth().clickable { onFont(index) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(label, Modifier.weight(1f), color = Ink)
-                        RadioButton(selected = fontChoice == index, onClick = { onFont(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(23.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("فونت و خوانایی", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                Text("سه فونت فارسی همراه برنامه؛ بدون نیاز به اینترنت.", color = Muted, fontSize = 11.sp)
+                fontNames.forEachIndexed { index, label ->
+                    Column(Modifier.fillMaxWidth().background(if (fontChoice == index) accent.copy(alpha = .08f) else CanvasColor, RoundedCornerShape(15.dp))
+                        .clickable { onFont(index) }.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, Modifier.weight(1f), color = Ink, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            RadioButton(selected = fontChoice == index, onClick = { onFont(index) }, colors = RadioButtonDefaults.colors(selectedColor = accent))
+                        }
+                        Text(fontSamples[index], color = if (fontChoice == index) accent else Muted, fontSize = 17.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
         }
-        Text("روزنگار · نسخه ۱٫۰٫۰", color = Muted, fontSize = 11.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = surface), shape = RoundedCornerShape(23.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("درباره روزنگار", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CalendarMonth, null, tint = accent)
+                    Text("روزنگار · نسخه ۱٫۰٫۱", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                }
+                Text("تقویم شمسی، مناسبت‌های ایران، تبدیل تاریخ، رویدادها و اوقات شرعی در یک همراه روزانه.", color = Muted, fontSize = 11.sp)
+            }
+        }
     }
 }
 
