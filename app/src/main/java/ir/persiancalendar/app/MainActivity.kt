@@ -107,6 +107,7 @@ private fun CalendarHome(accent: Color) {
     var visibleYear by remember { mutableIntStateOf(todayYear) }
     var visibleMonth by remember { mutableIntStateOf(todayMonth) }
     var selectedDay by remember { mutableIntStateOf(todayDay) }
+    var calendarMode by remember { mutableStateOf("ماه") }
 
     val monthCalendar = remember(visibleYear, visibleMonth) {
         persianCalendar().apply {
@@ -191,58 +192,105 @@ private fun CalendarHome(accent: Color) {
                 }
             }
         }
-        Spacer(Modifier.height(14.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { moveMonth(-1) }) { Icon(Icons.Default.ChevronRight, "ماه قبل", tint = Purple, modifier = Modifier.size(30.dp)) }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("برای جابه‌جایی بین ماه‌ها از فلش‌ها استفاده کنید", color = Muted, fontSize = 10.sp)
-            }
-            IconButton(onClick = { moveMonth(1) }) { Icon(Icons.Default.ChevronLeft, "ماه بعد", tint = Purple, modifier = Modifier.size(30.dp)) }
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth()) {
-            listOf("ش", "ی", "د", "س", "چ", "پ", "ج").forEachIndexed { index, label ->
-                Text(label, Modifier.weight(1f), textAlign = TextAlign.Center,
-                    color = if (index == 6) Color(0xFFD45D68) else Muted,
-                    fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(16.dp))
+        Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(16.dp)).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf("ماه", "هفته", "سال").forEach { mode ->
+                val selected = calendarMode == mode
+                Box(Modifier.weight(1f).background(if (selected) accent else Color.Transparent, RoundedCornerShape(12.dp))
+                    .clickable { calendarMode = mode }.padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
+                    Text(mode, color = if (selected) Color.White else Muted, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                }
             }
         }
-        Spacer(Modifier.height(6.dp))
-        cells.chunked(7).forEach { week ->
-            Row(Modifier.fillMaxWidth()) {
-                week.forEach { value ->
-                    val isSelected = value != 0 && value == selectedDay
-                    val isToday = value != 0 && visibleYear == todayYear && visibleMonth == todayMonth && value == todayDay
-                    val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
-                    Box(
-                        Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f).then(
-                            if (isSelected) Modifier.background(accent, CircleShape) else Modifier
-                        ).clickable(enabled = value != 0) { selectedDay = value },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (value != 0) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                Text(
-                                    faNumber(value),
-                                    color = when {
-                                        isSelected -> Color.White
-                                        isToday -> accent
-                                        isHoliday -> Color(0xFFD45D68)
-                                        else -> Ink
-                                    },
-                                    fontSize = 17.sp,
-                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium
-                                )
-                                if ((isToday || isHoliday) && !isSelected) {
-                                    Box(Modifier.padding(top = 1.dp).size(4.dp).background(if (isToday) accent else Color(0xFFD45D68), CircleShape))
+        Spacer(Modifier.height(10.dp))
+        when (calendarMode) {
+            "سال" -> {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { visibleYear--; selectedDay = 1 }) { Icon(Icons.Default.ChevronRight, "سال قبل", tint = accent) }
+                    Text(faNumber(visibleYear), color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = { visibleYear++; selectedDay = 1 }) { Icon(Icons.Default.ChevronLeft, "سال بعد", tint = accent) }
+                }
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        MonthNames.chunked(3).forEachIndexed { rowIndex, rowMonths ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                rowMonths.forEachIndexed { colIndex, monthName ->
+                                    val monthIndex = rowIndex * 3 + colIndex
+                                    val active = monthIndex == visibleMonth
+                                    Box(Modifier.weight(1f).background(if (active) accent.copy(alpha = .12f) else CanvasColor, RoundedCornerShape(14.dp))
+                                        .clickable { visibleMonth = monthIndex; calendarMode = "ماه" }
+                                        .padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
+                                        Text(monthName, color = if (active) accent else Ink, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium, fontSize = 12.sp)
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                repeat(7 - week.size) {
-                    Spacer(Modifier.weight(1f))
+            }
+            "هفته" -> {
+                val selectedCalendar = persianCalendar().apply {
+                    set(Calendar.YEAR, visibleYear); set(Calendar.MONTH, visibleMonth); set(Calendar.DAY_OF_MONTH, selectedDay)
+                }
+                val weekdayOffset = (selectedCalendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
+                val weekStart = (selectedCalendar.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, -weekdayOffset) }
+                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontWeight = FontWeight.Bold)
+                        Row(Modifier.fillMaxWidth()) {
+                            repeat(7) { index ->
+                                val dayCal = (weekStart.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, index) }
+                                val dayNum = dayCal.get(Calendar.DAY_OF_MONTH)
+                                val dayMonth = dayCal.get(Calendar.MONTH)
+                                val dayYear = dayCal.get(Calendar.YEAR)
+                                val isChosen = dayYear == visibleYear && dayMonth == visibleMonth && dayNum == selectedDay
+                                Column(Modifier.weight(1f).background(if (isChosen) accent else CanvasColor, RoundedCornerShape(12.dp))
+                                    .clickable { visibleYear = dayYear; visibleMonth = dayMonth; selectedDay = dayNum }
+                                    .padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(listOf("ش","ی","د","س","چ","پ","ج")[index], color = if (isChosen) Color.White.copy(alpha=.8f) else Muted, fontSize = 10.sp)
+                                    Text(faNumber(dayNum), color = if (isChosen) Color.White else Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
+                        }
+                        Text("برای دیدن جزئیات هر روز، روی آن بزنید.", color = Muted, fontSize = 11.sp)
+                    }
+                }
+            }
+            else -> {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { moveMonth(-1) }) { Icon(Icons.Default.ChevronRight, "ماه قبل", tint = accent, modifier = Modifier.size(30.dp)) }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("تقویم ماهانه", color = Muted, fontSize = 10.sp)
+                    }
+                    IconButton(onClick = { moveMonth(1) }) { Icon(Icons.Default.ChevronLeft, "ماه بعد", tint = accent, modifier = Modifier.size(30.dp)) }
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    listOf("ش", "ی", "د", "س", "چ", "پ", "ج").forEachIndexed { index, label ->
+                        Text(label, Modifier.weight(1f), textAlign = TextAlign.Center, color = if (index == 6) Color(0xFFD45D68) else Muted, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                cells.chunked(7).forEach { week ->
+                    Row(Modifier.fillMaxWidth()) {
+                        week.forEach { value ->
+                            val isSelected = value != 0 && value == selectedDay
+                            val isToday = value != 0 && visibleYear == todayYear && visibleMonth == todayMonth && value == todayDay
+                            val isHoliday = value != 0 && IranCalendarEvents.isHoliday(visibleYear, visibleMonth + 1, value)
+                            Box(Modifier.weight(1f).padding(2.dp).aspectRatio(0.94f).then(if (isSelected) Modifier.background(accent, CircleShape) else Modifier)
+                                .clickable(enabled = value != 0) { selectedDay = value }, contentAlignment = Alignment.Center) {
+                                if (value != 0) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                        Text(faNumber(value), color = when { isSelected -> Color.White; isToday -> accent; isHoliday -> Color(0xFFD45D68); else -> Ink },
+                                            fontSize = 17.sp, fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Medium)
+                                        if ((isToday || isHoliday) && !isSelected) Box(Modifier.padding(top = 1.dp).size(4.dp).background(if (isToday) accent else Color(0xFFD45D68), CircleShape))
+                                    }
+                                }
+                            }
+                        }
+                        repeat(7 - week.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
         }
