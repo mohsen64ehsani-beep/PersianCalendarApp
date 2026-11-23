@@ -296,7 +296,6 @@ object IranCalendarEvents {
         (10 to 25) to listOf(IranCalendarOccasion("روز حمل‌ونقل و رانندگان", false)),
         (10 to 26) to listOf(IranCalendarOccasion("روز آواها و نواهای ایرانی", false)),
         (11 to 2) to listOf(IranCalendarOccasion("جشن بهمنگان و روز ارومیه", false)),
-        (11 to 10) to listOf(IranCalendarOccasion("جشن سده", false)),
         (11 to 21) to listOf(IranCalendarOccasion("جشن سپندارمذگان و بزرگداشت خواجه نصیرالدین طوسی", false)),
         (11 to 25) to listOf(IranCalendarOccasion("روز بزرگداشت خواجوی کرمانی", false)),
         (12 to 5) to listOf(IranCalendarOccasion("جشن اسفندگان", false)),
