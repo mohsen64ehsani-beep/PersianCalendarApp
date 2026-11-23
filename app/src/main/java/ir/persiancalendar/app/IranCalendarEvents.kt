@@ -78,6 +78,7 @@ object IranCalendarEvents {
         (1 to 6) to listOf(IranCalendarOccasion("زادروز زرتشت (روز امید)", false)),
         (1 to 12) to listOf(IranCalendarOccasion("روز جمهوری اسلامی ایران", true)),
         (1 to 13) to listOf(IranCalendarOccasion("روز طبیعت", true)),
+        (1 to 14) to listOf(IranCalendarOccasion("شهادت امام جعفر صادق (ع)", true)),
         (1 to 19) to listOf(IranCalendarOccasion("جشن فروردینگان", false)),
         (1 to 20) to listOf(IranCalendarOccasion("روز ملی فناوری هسته‌ای", false)),
         (1 to 25) to listOf(IranCalendarOccasion("روز بزرگداشت عطار نیشابوری", false)),
