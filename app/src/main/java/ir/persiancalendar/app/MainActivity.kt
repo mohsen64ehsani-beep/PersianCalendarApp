@@ -512,6 +512,40 @@ private fun DateConverter(accent: Color) {
 private fun DateField(label:String,value:String,onValue:(String)->Unit,modifier:Modifier=Modifier){
     OutlinedTextField(value=value,onValueChange={onValue(it.filter{ch->ch.isDigit() || ch in '۰'..'۹'}.take(4))},label={Text(label)},modifier=modifier,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
 }
+private data class PrayerMoment(val title: String, val atMillis: Long)
+
+private fun calculatePrayerMoments(city: IranianCity, methodIndex: Int, dateCalendar: GregorianCalendar): List<PrayerMoment> {
+    val date = DateComponents(dateCalendar.get(Calendar.YEAR), dateCalendar.get(Calendar.MONTH) + 1, dateCalendar.get(Calendar.DAY_OF_MONTH))
+    val coordinates = Coordinates(latitude = city.latitude, longitude = city.longitude, altitude = 0.0)
+    val params = when (methodIndex) {
+        1 -> CalculationMethod.MUSLIM_WORLD_LEAGUE.parameters()
+        2 -> CalculationMethod.KARACHI.parameters()
+        else -> CalculationMethod.OTHER.parameters().copy(
+            fajrAngle = 17.7,
+            maghribIsInterval = false,
+            maghribValue = 4.5,
+            ishaIsInterval = false,
+            ishaValue = 14.0,
+            madhab = Madhab.SHAFI
+        )
+    }
+    val times = PrayerTimes(
+        coordinates = coordinates,
+        dateComponents = date,
+        calculationParameters = params,
+        utcOffset = ZoneOffset.ofHoursMinutes(3, 30),
+        countryCode = "IR",
+        cityName = city.name
+    )
+    return listOf(
+        "اذان صبح" to times.fajr,
+        "اذان ظهر" to times.dhuhr,
+        "اذان عصر" to times.asr,
+        "اذان مغرب" to times.maghrib,
+        "اذان عشا" to times.isha
+    ).mapNotNull { (label, time) -> time?.let { PrayerMoment(label, it.toInstant().toEpochMilli()) } }
+}
+
 private data class IranianCity(val name: String, val latitude: Double, val longitude: Double)
 private val IranianCities = listOf(
     IranianCity("تهران", 35.6892, 51.3890),
@@ -540,42 +574,39 @@ private fun PrayerTimesPage(accent: Color) {
     }
     val city = IranianCities[cityIndex]
     val methodNames = listOf("روش رسمی تهران", "مسلمانان جهان", "کراچی")
-    val prayerData = remember(now, cityIndex, methodIndex) {
+    val prayerMoments = remember(now, cityIndex, methodIndex) {
         runCatching {
-            val zone = java.util.TimeZone.getTimeZone("Asia/Tehran")
-            val localCalendar = GregorianCalendar(zone).apply { timeInMillis = now }
-            val date = DateComponents(localCalendar.get(Calendar.YEAR), localCalendar.get(Calendar.MONTH) + 1, localCalendar.get(Calendar.DAY_OF_MONTH))
-            val coordinates = Coordinates(latitude = city.latitude, longitude = city.longitude, altitude = 0.0)
-            val params = when (methodIndex) {
-                1 -> CalculationMethod.MUSLIM_WORLD_LEAGUE.parameters()
-                2 -> CalculationMethod.KARACHI.parameters()
-                else -> CalculationMethod.OTHER.parameters().copy(
-                    fajrAngle = 17.7,
-                    maghribIsInterval = false,
-                    maghribValue = 4.5,
-                    ishaIsInterval = false,
-                    ishaValue = 14.0,
-                    madhab = Madhab.SHAFI
-                )
-            }
-            val times = PrayerTimes(
-                coordinates = coordinates,
-                dateComponents = date,
-                calculationParameters = params,
-                utcOffset = ZoneOffset.ofHoursMinutes(3, 30),
-                countryCode = "IR",
-                cityName = city.name
-            )
-            val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale("fa", "IR"))
-            listOf(
-                "اذان صبح" to times.fajr,
-                "طلوع آفتاب" to times.sunrise,
-                "اذان ظهر" to times.dhuhr,
-                "اذان عصر" to times.asr,
-                "اذان مغرب" to times.maghrib,
-                "اذان عشا" to times.isha
-            ).mapNotNull { (label, time) -> time?.let { label to formatter.format(it) } }
+            val calendar = GregorianCalendar(java.util.TimeZone.getTimeZone("Asia/Tehran")).apply { timeInMillis = now }
+            calculatePrayerMoments(city, methodIndex, calendar)
         }.getOrElse { emptyList() }
+    }
+    val formatter = remember { DateTimeFormatter.ofPattern("HH:mm", Locale("fa", "IR")) }
+    val prayerData = prayerMoments.map { moment ->
+        moment.title to formatter.format(java.time.Instant.ofEpochMilli(moment.atMillis).atOffset(ZoneOffset.ofHoursMinutes(3, 30)))
+    }
+    var pendingPrayerReminders by remember { mutableStateOf<List<PrayerMoment>>(emptyList()) }
+    val prayerNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) pendingPrayerReminders.forEach { reminder ->
+            EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
+        }
+        pendingPrayerReminders = emptyList()
+    }
+    fun schedulePrayerWeek() {
+        val schedules = mutableListOf<PrayerMoment>()
+        val zone = java.util.TimeZone.getTimeZone("Asia/Tehran")
+        repeat(7) { offset ->
+            val day = GregorianCalendar(zone).apply { timeInMillis = now; add(Calendar.DAY_OF_MONTH, offset) }
+            schedules += calculatePrayerMoments(city, methodIndex, day).filter { it.atMillis > now }
+                .map { it.copy(title = it.title + " · " + city.name) }
+        }
+        if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            pendingPrayerReminders = schedules
+            prayerNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            schedules.forEach { reminder ->
+                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
+            }
+        }
     }
     val dateLabel = remember(now) {
         val c = persianCalendar().apply { timeInMillis = now }
@@ -633,7 +664,11 @@ private fun PrayerTimesPage(accent: Color) {
                 }
             }
         }
-        Text("زمان‌ها به‌صورت آفلاین و بر اساس مختصات شهر و روش انتخابی محاسبه می‌شوند. برای تطبیق با تقویم رسمی اوقات شرعی ایران، روش و اختلاف دقیقه‌ای باید در تنظیمات قابل تنظیم و با منبع معتبر بررسی شود.", color = Muted, fontSize = 11.sp)
+        Button(onClick = { schedulePrayerWeek() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = accent)) {
+            Text("فعال‌سازی اعلان اوقات شرعی ۷ روز آینده")
+        }
+        Text("اعلان‌ها با صدای پیش‌فرض اعلان دستگاه پخش می‌شوند؛ برای پخش فایل کامل اذان، انتخاب و بسته‌بندی صدای دارای مجوز در مرحله بعد انجام می‌شود.", color = Muted, fontSize = 11.sp)
+        Text("روش تهران: فجر ۱۷٫۷°، مغرب ۴٫۵° و عشا ۱۴° زیر افق. اختلاف دقیقه‌ای ممکن است به‌دلیل مختصات و گردکردن با جدول محلی متفاوت باشد.", color = Muted, fontSize = 11.sp)
     }
 }
 
