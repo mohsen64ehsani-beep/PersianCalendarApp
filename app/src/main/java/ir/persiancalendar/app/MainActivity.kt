@@ -972,7 +972,7 @@ private fun PrayerTimesPage(accent: Color) {
         schedules.distinctBy { it.atMillis.hashCode() }.forEach { reminder ->
             EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis, playAdhan = true)
         }
-        prayerPrefs.edit().putStringSet("scheduled_prayer_ids", ids.map(Int::toString).toSet()).apply()
+        prayerPrefs.edit().putStringSet("scheduled_prayer_ids", ids.map { it.toString() }.toSet()).apply()
         scheduledPrayerReminderCount = ids.size
     }
     val prayerNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -988,6 +988,7 @@ private fun PrayerTimesPage(accent: Color) {
                 .map { it.copy(title = it.title + " · " + city.name) }
         }
         if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            cancelPrayerSchedules()
             pendingPrayerReminders = schedules
             prayerNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         } else {
