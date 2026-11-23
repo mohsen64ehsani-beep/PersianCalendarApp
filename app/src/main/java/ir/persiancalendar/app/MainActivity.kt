@@ -724,7 +724,7 @@ private fun SettingsPage(
                 }
             }
         }
-        Text("روزنگار · نسخه ${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 11.sp)
+        Text("روزنگار · نسخه ۰٫۹٫۰", color = Muted, fontSize = 11.sp)
     }
 }
 
