@@ -593,7 +593,7 @@ private fun PrayerTimesPage(accent: Color) {
     val prayerNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
             pendingPrayerReminders.forEach { reminder ->
-                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
+                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis, playAdhan = true)
             }
             scheduledPrayerReminderCount = pendingPrayerReminders.size
         } else {
@@ -614,7 +614,7 @@ private fun PrayerTimesPage(accent: Color) {
             prayerNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         } else {
             schedules.forEach { reminder ->
-                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis)
+                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis, playAdhan = true)
             }
             scheduledPrayerReminderCount = schedules.size
         }
