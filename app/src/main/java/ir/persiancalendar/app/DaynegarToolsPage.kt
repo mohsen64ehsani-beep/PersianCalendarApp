@@ -194,6 +194,7 @@ fun DaynegarToolsPage(accent: Color) {
             Text("${note.length} / ۲۰۰۰ نویسه", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
         }
         PersonalPlannerCard(accent)
+        PersonalStatsCard(accent)
         ToolCard(accent, "تقویم قمری", "تاریخ قمری امروز بر اساس محاسبه تقویم اسلامی دستگاه", Icons.Default.Brightness3) {
             Text(todayHijri, color = accent, fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Text("ممکن است با اعلام رؤیت هلال در ایران یک روز اختلاف داشته باشد.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
