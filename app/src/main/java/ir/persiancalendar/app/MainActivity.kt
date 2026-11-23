@@ -956,16 +956,27 @@ private fun PrayerTimesPage(accent: Color) {
         moment.title to formatter.format(java.time.Instant.ofEpochMilli(moment.atMillis).atOffset(ZoneOffset.ofHoursMinutes(3, 30)))
     }
     var pendingPrayerReminders by remember { mutableStateOf<List<PrayerMoment>>(emptyList()) }
-    var scheduledPrayerReminderCount by remember { mutableIntStateOf(0) }
-    val prayerNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            pendingPrayerReminders.forEach { reminder ->
-                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis, playAdhan = true)
-            }
-            scheduledPrayerReminderCount = pendingPrayerReminders.size
-        } else {
-            scheduledPrayerReminderCount = 0
+    var scheduledPrayerReminderCount by remember {
+        mutableIntStateOf(prayerPrefs.getStringSet("scheduled_prayer_ids", emptySet())?.size ?: 0)
+    }
+    fun cancelPrayerSchedules() {
+        prayerPrefs.getStringSet("scheduled_prayer_ids", emptySet())?.forEach { rawId ->
+            rawId.toIntOrNull()?.let { EventReminderScheduler.cancel(context, it) }
         }
+        prayerPrefs.edit().remove("scheduled_prayer_ids").apply()
+        scheduledPrayerReminderCount = 0
+    }
+    fun applyPrayerSchedules(schedules: List<PrayerMoment>) {
+        cancelPrayerSchedules()
+        val ids = schedules.map { it.atMillis.hashCode() }.distinct()
+        schedules.distinctBy { it.atMillis.hashCode() }.forEach { reminder ->
+            EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis, playAdhan = true)
+        }
+        prayerPrefs.edit().putStringSet("scheduled_prayer_ids", ids.map(Int::toString).toSet()).apply()
+        scheduledPrayerReminderCount = ids.size
+    }
+    val prayerNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) applyPrayerSchedules(pendingPrayerReminders)
         pendingPrayerReminders = emptyList()
     }
     fun schedulePrayerWeek() {
@@ -980,10 +991,7 @@ private fun PrayerTimesPage(accent: Color) {
             pendingPrayerReminders = schedules
             prayerNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            schedules.forEach { reminder ->
-                EventReminderScheduler.schedule(context, reminder.atMillis.hashCode(), reminder.title, reminder.atMillis, playAdhan = true)
-            }
-            scheduledPrayerReminderCount = schedules.size
+            applyPrayerSchedules(schedules)
         }
     }
     val dateLabel = remember(now) {
@@ -1040,7 +1048,7 @@ private fun PrayerTimesPage(accent: Color) {
                     }
                     DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }, shape = RoundedCornerShape(16.dp), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
                         IranianCities.forEachIndexed { index, item ->
-                            DropdownMenuItem(text = { Text(item.name) }, onClick = { cityIndex = index; prayerPrefs.edit().putInt("city_index", index).apply(); cityMenu = false })
+                            DropdownMenuItem(text = { Text(item.name) }, onClick = { if (cityIndex != index) cancelPrayerSchedules(); cityIndex = index; prayerPrefs.edit().putInt("city_index", index).apply(); cityMenu = false })
                         }
                     }
                 }
@@ -1051,7 +1059,7 @@ private fun PrayerTimesPage(accent: Color) {
                     }
                     DropdownMenu(expanded = methodMenu, onDismissRequest = { methodMenu = false }, shape = RoundedCornerShape(16.dp), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
                         methodNames.forEachIndexed { index, item ->
-                            DropdownMenuItem(text = { Text(item) }, onClick = { methodIndex = index; prayerPrefs.edit().putInt("method_index", index).apply(); methodMenu = false })
+                            DropdownMenuItem(text = { Text(item) }, onClick = { if (methodIndex != index) cancelPrayerSchedules(); methodIndex = index; prayerPrefs.edit().putInt("method_index", index).apply(); methodMenu = false })
                         }
                     }
                 }
@@ -1061,6 +1069,11 @@ private fun PrayerTimesPage(accent: Color) {
             Text("فعال‌سازی اعلان و اذان ۷ روز آینده", fontWeight = FontWeight.Bold)
         }
         if (scheduledPrayerReminderCount > 0) Text("${faNumber(scheduledPrayerReminderCount)} اعلان برای شهر ${city.name} تنظیم شد.", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        if (scheduledPrayerReminderCount > 0) {
+            OutlinedButton(onClick = { cancelPrayerSchedules() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp)) {
+                Text("لغو همه اعلان‌های اذان برنامه‌ریزی‌شده", color = Color(0xFFD13F50), fontWeight = FontWeight.SemiBold)
+            }
+        }
         OutlinedButton(onClick = {
             val current = adhanPreviewPlayer
             if (current?.isPlaying == true) { current.stop(); current.release(); adhanPreviewPlayer = null }
