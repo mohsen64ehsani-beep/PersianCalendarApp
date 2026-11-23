@@ -188,6 +188,18 @@ object IranCalendarEvents {
             else -> emptyList()
         }
 
+    fun forMonth(year: Int, month: Int): List<Pair<Int, IranCalendarOccasion>> {
+        val source = when (year) {
+            1405 -> year1405
+            1406 -> year1406
+            else -> emptyMap()
+        }
+        return source.entries
+            .filter { it.key.first == month }
+            .flatMap { entry -> entry.value.map { entry.key.second to it } }
+            .sortedWith(compareBy<Pair<Int, IranCalendarOccasion>> { it.first }.thenBy { it.second.title })
+    }
+
     fun isHoliday(year: Int, month: Int, day: Int): Boolean =
         forDate(year, month, day).any { it.isHoliday }
 }
