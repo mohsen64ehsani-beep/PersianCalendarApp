@@ -499,8 +499,10 @@ private val IranianCities = listOf(
 
 @Composable
 private fun PrayerTimesPage(accent: Color) {
-    var cityIndex by remember { mutableIntStateOf(0) }
-    var methodIndex by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+    val prayerPrefs = remember { context.getSharedPreferences("daynegar_prayer", 0) }
+    var cityIndex by remember { mutableIntStateOf(prayerPrefs.getInt("city_index", 0).coerceIn(0, IranianCities.lastIndex)) }
+    var methodIndex by remember { mutableIntStateOf(prayerPrefs.getInt("method_index", 0).coerceIn(0, 2)) }
     var cityMenu by remember { mutableStateOf(false) }
     var methodMenu by remember { mutableStateOf(false) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -569,7 +571,7 @@ private fun PrayerTimesPage(accent: Color) {
                     }
                     DropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
                         IranianCities.forEachIndexed { index, item ->
-                            DropdownMenuItem(text = { Text(item.name) }, onClick = { cityIndex = index; cityMenu = false })
+                            DropdownMenuItem(text = { Text(item.name) }, onClick = { cityIndex = index; prayerPrefs.edit().putInt("city_index", index).apply(); cityMenu = false })
                         }
                     }
                 }
@@ -581,7 +583,7 @@ private fun PrayerTimesPage(accent: Color) {
                     }
                     DropdownMenu(expanded = methodMenu, onDismissRequest = { methodMenu = false }) {
                         methodNames.forEachIndexed { index, item ->
-                            DropdownMenuItem(text = { Text(item) }, onClick = { methodIndex = index; methodMenu = false })
+                            DropdownMenuItem(text = { Text(item) }, onClick = { methodIndex = index; prayerPrefs.edit().putInt("method_index", index).apply(); methodMenu = false })
                         }
                     }
                 }
