@@ -2,6 +2,7 @@ package ir.persiancalendar.app
 
 import android.os.Bundle
 import android.os.Build
+import android.media.MediaPlayer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import io.github.abdulwaheds.prayertimeplus.CalculationMethod
@@ -573,6 +574,13 @@ private fun PrayerTimesPage(accent: Color) {
     var cityMenu by remember { mutableStateOf(false) }
     var methodMenu by remember { mutableStateOf(false) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var adhanPreviewPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    DisposableEffect(Unit) {
+        onDispose {
+            adhanPreviewPlayer?.release()
+            adhanPreviewPlayer = null
+        }
+    }
     LaunchedEffect(Unit) {
         while (true) { now = System.currentTimeMillis(); kotlinx.coroutines.delay(60_000) }
     }
@@ -680,6 +688,26 @@ private fun PrayerTimesPage(accent: Color) {
         }
         if (scheduledPrayerReminderCount > 0) {
             Text("${faNumber(scheduledPrayerReminderCount)} اعلان برای شهر ${city.name} تنظیم شد.", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
+        Button(onClick = {
+            val current = adhanPreviewPlayer
+            if (current?.isPlaying == true) {
+                current.stop()
+                current.release()
+                adhanPreviewPlayer = null
+            } else {
+                val player = MediaPlayer.create(context, R.raw.adhan)
+                if (player != null) {
+                    adhanPreviewPlayer = player
+                    player.setOnCompletionListener {
+                        it.release()
+                        adhanPreviewPlayer = null
+                    }
+                    player.start()
+                }
+            }
+        }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
+            Text(if (adhanPreviewPlayer?.isPlaying == true) "توقف پخش اذان" else "پخش نمونه صدای اذان")
         }
         Text("برای اعلان‌های نماز، فایل اذان دارای مجوز CC0 از کانال اعلان جداگانه پخش می‌شود. صدای کانال را می‌توان از تنظیمات اعلان Android کنترل کرد.", color = Muted, fontSize = 11.sp)
         Text("روش تهران: فجر ۱۷٫۷°، مغرب ۴٫۵° و عشا ۱۴° زیر افق. اختلاف دقیقه‌ای ممکن است به‌دلیل مختصات و گردکردن با جدول محلی متفاوت باشد.", color = Muted, fontSize = 11.sp)
