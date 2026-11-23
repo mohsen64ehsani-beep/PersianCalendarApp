@@ -79,7 +79,7 @@ val downloadCc0Adhan by tasks.registering {
             }
         }
         val digest = java.security.MessageDigest.getInstance("SHA-1").digest(output.readBytes())
-            .joinToString("") { "%02x".format(it) }
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
         check(digest == "b86432f1581e11f898de1dc3402af0d541af110e") {
             "CC0 Adhan audio checksum mismatch; refusing to package an unverified file."
         }
