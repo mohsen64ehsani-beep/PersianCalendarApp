@@ -41,4 +41,25 @@ class IranCalendarEventsTest {
     fun unsupportedYearsReturnNoOfficialEvents() {
         assertEquals(emptyList<IranCalendarOccasion>(), IranCalendarEvents.forDate(1407, 1, 1))
     }
+    @Test
+    fun year1405IncludesProfessionalAndStudentOccasions() {
+        assertTrue(IranCalendarEvents.forDate(1405, 6, 11).any { it.title.contains("پرستار") })
+        assertTrue(IranCalendarEvents.forDate(1405, 8, 13).any { it.title.contains("دانش‌آموز") })
+        assertTrue(IranCalendarEvents.forDate(1405, 12, 29).any { it.title.contains("ملی شدن صنعت نفت") })
+    }
+
+    @Test
+    fun year1406IncludesNewNationalCommemorations() {
+        assertTrue(IranCalendarEvents.forDate(1406, 8, 21).any { it.title.contains("هوافضا") })
+        assertTrue(IranCalendarEvents.forDate(1406, 9, 9).any { it.title.contains("جزایر سه‌گانه") })
+        assertTrue(IranCalendarEvents.forDate(1406, 6, 11).any { it.title.contains("پرستار") })
+        assertTrue(IranCalendarEvents.forDate(1406, 8, 13).any { it.title.contains("دانش‌آموز") })
+    }
+
+    @Test
+    fun monthListingIncludesAdditionalOccasions() {
+        assertTrue(IranCalendarEvents.forMonth(1405, 8).any { it.second.title.contains("دانش‌آموز") })
+        assertTrue(IranCalendarEvents.forMonth(1406, 9).any { it.second.title.contains("جزایر سه‌گانه") })
+    }
+
 }
