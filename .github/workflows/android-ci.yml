@@ -5,7 +5,7 @@ run-name: Signed Android release (${{ github.ref_name }})
     branches: [ main ]
   workflow_dispatch:
 concurrency:
-  group: android-release-${{ github.ref }}
+  group: daynegar-release-v2-${{ github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
