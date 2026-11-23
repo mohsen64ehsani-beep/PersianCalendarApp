@@ -31,6 +31,19 @@ object EventReminderScheduler {
             .putString("reminder_$id", "$triggerAtMillis|$title").apply()
     }
 
+    fun cancel(context: Context, id: Int) {
+        val intent = Intent(context, EventReminderReceiver::class.java)
+        val pending = PendingIntent.getBroadcast(
+            context, id, intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (pending != null) {
+            (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pending)
+            pending.cancel()
+        }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
+    }
+
     fun restoreAfterBoot(context: Context) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs.all.forEach { (key, value) ->
