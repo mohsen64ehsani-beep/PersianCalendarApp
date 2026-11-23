@@ -30,6 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -158,21 +159,35 @@ private fun CalendarHome(accent: Color) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("تقویم روزنگار", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("تقویم فارسی و زمان ایران", color = Muted, fontSize = 13.sp)
+                Text("روزنگار", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
+                Text("تقویم هوشمند فارسی", color = Muted, fontSize = 12.sp)
             }
-            Box(Modifier.size(46.dp).background(accent.copy(alpha = 0.12f), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.CalendarMonth, null, tint = accent)
+            Box(Modifier.size(48.dp).background(
+                Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.68f))), RoundedCornerShape(16.dp)
+            ), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(26.dp))
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(horizontal = 17.dp, vertical = 14.dp)) {
-                Text(if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) "امروز" else "تاریخ انتخاب‌شده", color = Muted, fontSize = 13.sp)
-                Text(faNumber(selectedDay) + " " + MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                Text(selectedGregorian, color = Muted, fontSize = 12.sp)
+        Spacer(Modifier.height(18.dp))
+        Box(
+            Modifier.fillMaxWidth().background(
+                Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.78f))),
+                RoundedCornerShape(26.dp)
+            ).padding(horizontal = 20.dp, vertical = 20.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) "امروز" else "تاریخ انتخاب‌شده",
+                        color = Color.White.copy(alpha = .82f), fontSize = 13.sp)
+                    Icon(Icons.Default.WbSunny, null, tint = Color.White.copy(alpha = .9f))
+                }
+                Text(faNumber(selectedDay) + " " + MonthNames[visibleMonth], color = Color.White,
+                    fontSize = 29.sp, fontWeight = FontWeight.ExtraBold)
+                Text(faNumber(visibleYear), color = Color.White.copy(alpha = .92f), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(2.dp))
+                Text(selectedGregorian, color = Color.White.copy(alpha = .82f), fontSize = 12.sp)
                 if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) {
-                    Text("امروز · ساعت رسمی ایران", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("●  روز جاری · منطقه زمانی ایران", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -384,7 +399,7 @@ private fun SettingsPage(themeIndex:Int,onTheme:(Int)->Unit,accent:Color){
                 }
             }}
         }
-        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰٫۸٫۰",color=Muted,fontSize=12.sp)
+        Text("تقویم روزنگار",color=Ink,fontWeight=FontWeight.SemiBold); Text("نسخه ۰٫۹٫۰",color=Muted,fontSize=12.sp)
     }
 }
 
