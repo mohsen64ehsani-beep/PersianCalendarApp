@@ -132,7 +132,7 @@ val downloadAdditionalPersianFonts by tasks.registering {
     val fontFiles = listOf(
         Triple("https://raw.githubusercontent.com/aminabedi68/Estedad/master/fonts/ttf/Estedad-Regular.ttf", "estedad_regular.ttf", "450fe89141fa068d1111f86e4d8d5d644e297bdd"),
         Triple("https://raw.githubusercontent.com/aminabedi68/Estedad/master/fonts/ttf/Estedad-Bold.ttf", "estedad_bold.ttf", "d32ef246f3c29747fb3466b67388cbe924fea347"),
-        Triple("https://raw.githubusercontent.com/rastikerdar/sahel-font/master/dist/Farsi-Digits/Sahel-FD.ttf", "sahel_regular.ttf", "c46796870a40335346764a05f14c61c30b533381"),
+        Triple("https://raw.githubusercontent.com/rastikerdar/sahel-font/master/dist/Farsi-Digits/Sahel-FD.ttf", "sahel_regular.ttf", "b9a8140796e44b25c05b4f2f094e2b74e463a311"),
         Triple("https://raw.githubusercontent.com/rastikerdar/sahel-font/master/dist/Farsi-Digits/Sahel-Bold-FD.ttf", "sahel_bold.ttf", "e8a98f8d87a1bc7fb0ff56115704d26852c630e7")
     )
     outputs.files(fontFiles.map { fontDir.file(it.second) })
