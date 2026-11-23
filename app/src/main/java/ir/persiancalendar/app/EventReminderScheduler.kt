@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -15,11 +17,12 @@ object EventReminderScheduler {
     private const val CHANNEL_ID = "daynegar_reminders"
     private const val PREFS = "daynegar_reminders"
 
-    fun schedule(context: Context, id: Int, title: String, triggerAtMillis: Long) {
+    fun schedule(context: Context, id: Int, title: String, triggerAtMillis: Long, playAdhan: Boolean = false) {
         if (triggerAtMillis <= System.currentTimeMillis()) return
         val intent = Intent(context, EventReminderReceiver::class.java).apply {
             putExtra("reminder_id", id)
             putExtra("reminder_title", title)
+            putExtra("play_adhan", playAdhan)
         }
         val pending = PendingIntent.getBroadcast(
             context, id, intent,
@@ -27,8 +30,9 @@ object EventReminderScheduler {
         )
         val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pending)
+        val soundFlag = if (playAdhan) 1 else 0
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString("reminder_$id", "$triggerAtMillis|$title").apply()
+            .putString("reminder_$id", "$triggerAtMillis|$soundFlag|$title").apply()
     }
 
     fun cancel(context: Context, id: Int) {
@@ -48,35 +52,54 @@ object EventReminderScheduler {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs.all.forEach { (key, value) ->
             if (key.startsWith("reminder_") && value is String) {
-                val split = value.split("|", limit = 2)
+                val split = value.split("|", limit = 3)
                 val id = key.removePrefix("reminder_").toIntOrNull() ?: return@forEach
                 val time = split.firstOrNull()?.toLongOrNull() ?: return@forEach
-                val title = split.getOrNull(1) ?: "یادآور"
-                if (time > System.currentTimeMillis()) schedule(context, id, title, time)
+                val hasSoundField = split.size == 3
+                val playAdhan = hasSoundField && split.getOrNull(1) == "1"
+                val title = if (hasSoundField) split.getOrNull(2) else split.getOrNull(1)
+                if (time > System.currentTimeMillis()) schedule(context, id, title ?: "یادآور", time, playAdhan)
                 else prefs.edit().remove(key).apply()
             }
         }
     }
 
-    internal fun show(context: Context, id: Int, title: String) {
+    internal fun show(context: Context, id: Int, title: String, playAdhan: Boolean) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = if (playAdhan) "daynegar_adhan" else CHANNEL_ID
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "یادآورهای روزنگار", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(
+                channelId,
+                if (playAdhan) "اذان و اوقات شرعی" else "یادآورهای روزنگار",
+                NotificationManager.IMPORTANCE_HIGH
             )
+            if (playAdhan) {
+                val soundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.adhan}")
+                val attributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+                channel.setSound(soundUri, attributes)
+            }
+            manager.createNotificationChannel(channel)
         }
         val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val contentIntent = launchIntent?.let {
             PendingIntent.getActivity(context, id, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
-            .setContentTitle("یادآور روزنگار")
+            .setContentTitle(if (playAdhan) "وقت نماز" else "یادآور روزنگار")
             .setContentText(title)
             .setStyle(NotificationCompat.BigTextStyle().bigText(title))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(contentIntent)
+            .apply {
+                if (playAdhan && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    setSound(Uri.parse("android.resource://${context.packageName}/${R.raw.adhan}"))
+                }
+            }
             .build()
         if (Build.VERSION.SDK_INT < 33 ||
             context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -92,7 +115,8 @@ class EventReminderReceiver : BroadcastReceiver() {
         EventReminderScheduler.show(
             context,
             intent.getIntExtra("reminder_id", 0),
-            intent.getStringExtra("reminder_title") ?: "یادآور"
+            intent.getStringExtra("reminder_title") ?: "یادآور",
+            intent.getBooleanExtra("play_adhan", false)
         )
     }
 }
