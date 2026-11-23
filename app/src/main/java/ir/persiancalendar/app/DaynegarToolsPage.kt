@@ -169,22 +169,22 @@ fun DaynegarToolsPage(accent: Color) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF203747)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(
                 Modifier.fillMaxWidth().background(
-                    Brush.linearGradient(listOf(Color(0xFF203747), accent.copy(alpha = .86f), Color(0xFF426B70))),
+                    Brush.linearGradient(listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surface)),
                     RoundedCornerShape(24.dp)
                 ).padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(Modifier.size(48.dp).background(Color.White.copy(alpha = .14f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(25.dp))
+                    Icon(Icons.Default.AutoAwesome, null, tint = accent, modifier = Modifier.size(25.dp))
                 }
                 Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text("ابزارهای روزنگار", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("یادداشت، جست‌وجوی مناسبت، ساعت شهرها و ابزارهای روزانه", color = Color.White.copy(alpha = .78f), fontSize = 11.sp)
+                    Text("ابزارهای روزنگار", color = MaterialTheme.colorScheme.onSurface, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("یادداشت‌ها، مناسبت‌ها و ابزارهای روزانه", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                 }
             }
         }
