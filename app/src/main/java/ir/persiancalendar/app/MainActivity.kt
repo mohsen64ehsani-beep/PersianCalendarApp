@@ -131,6 +131,11 @@ private fun CalendarHome(accent: Color) {
     val todayYear = today.get(Calendar.YEAR)
     val todayMonth = today.get(Calendar.MONTH)
     val todayDay = today.get(Calendar.DAY_OF_MONTH)
+    val iranClock = remember(todayTick) {
+        SimpleDateFormat("HH:mm", Locale("fa", "IR")).apply {
+            timeZone = java.util.TimeZone.getTimeZone("Asia/Tehran")
+        }.format(java.util.Date(todayTick))
+    }
 
     var visibleYear by remember { mutableIntStateOf(todayYear) }
     var visibleMonth by remember { mutableIntStateOf(todayMonth) }
@@ -223,7 +228,7 @@ private fun CalendarHome(accent: Color) {
                 Spacer(Modifier.height(2.dp))
                 Text(selectedGregorian, color = Color.White.copy(alpha = .82f), fontSize = 12.sp)
                 if (visibleYear == todayYear && visibleMonth == todayMonth && selectedDay == todayDay) {
-                    Text("●  روز جاری · منطقه زمانی ایران", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text("●  امروز · ساعت ایران  $iranClock", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
