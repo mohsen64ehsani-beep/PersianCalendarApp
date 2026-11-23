@@ -34,7 +34,7 @@ class PrayerTimesCalculationTest {
         for (index in 0 until ordered.lastIndex) {
             assertNotNull(ordered[index])
             assertNotNull(ordered[index + 1])
-            assertTrue(ordered[index]!!.isBefore(ordered[index + 1]))
+            assertTrue(ordered[index]!!.isBefore(ordered[index + 1]!!))
         }
     }
 }
