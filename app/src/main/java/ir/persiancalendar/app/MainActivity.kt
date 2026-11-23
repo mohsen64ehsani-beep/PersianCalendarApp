@@ -75,7 +75,7 @@ private fun DaynegarSplash() {
     val emblemScale = remember { androidx.compose.animation.core.Animatable(.88f) }
     LaunchedEffect(Unit) {
         progressTarget = 1f
-        emblemScale.animateTo(1f, animation = tween(850))
+        emblemScale.animateTo(1f, animationSpec = tween(850))
     }
     Box(
         Modifier.fillMaxSize().background(
