@@ -62,7 +62,6 @@ private val Muted: Color @Composable get() = LocalDayPalette.current.muted
 private val CanvasColor: Color @Composable get() = LocalDayPalette.current.canvas
 private val Purple = Color(0xFF7255C7)
 private val MonthNames = listOf("فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند")
-private val WeekDays = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه")
 private val PersianDigits = "۰۱۲۳۴۵۶۷۸۹"
 
 private fun faNumber(value: Int): String =
@@ -733,13 +732,3 @@ private fun SettingsPage(
     }
 }
 
-@Composable
-private fun PlaceholderPage(title: String, subtitle: String) {
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(title, color = Ink, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(10.dp))
-        Text(subtitle, color = Muted, fontSize = 14.sp, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(18.dp))
-        Text("در حال توسعه", color = Purple, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
