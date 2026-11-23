@@ -203,10 +203,11 @@ fun PersonalPlannerCard(accent: Color) {
 fun PersonalStatsCard(accent: Color) {
     val context = LocalContext.current
     val toolsPrefs = remember { context.getSharedPreferences("daynegar_tools", 0) }
+    val eventPrefs = remember { context.getSharedPreferences("daynegar", 0) }
     val reminderPrefs = remember { context.getSharedPreferences("daynegar_reminders", 0) }
     val tasks = decodePlannerTasks(toolsPrefs.getString("personal_tasks_v1", null))
     val completed = tasks.count { it.completed }
-    val savedEvents = toolsPrefs.all.count { (key, value) ->
+    val savedEvents = eventPrefs.all.count { (key, value) ->
         key.startsWith("events_") && value is Set<*> && value.isNotEmpty()
     }
     val savedNotes = toolsPrefs.all.count { (key, value) ->
