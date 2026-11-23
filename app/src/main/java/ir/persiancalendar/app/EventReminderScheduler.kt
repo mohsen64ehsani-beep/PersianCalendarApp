@@ -68,8 +68,13 @@ object EventReminderScheduler {
                 val playAdhan = split.getOrNull(1) == "1"
                 val repeatDaily = modern && split.getOrNull(2) == "1"
                 val title = if (modern) split.getOrNull(3) else split.getOrNull(2) ?: split.getOrNull(1)
-                if (time > System.currentTimeMillis()) schedule(context, id, title ?: "یادآور", time, playAdhan, repeatDaily)
-                else prefs.edit().remove(key).apply()
+                val safeTitle = title ?: "یادآور"
+                val now = System.currentTimeMillis()
+                when {
+                    time > now -> schedule(context, id, safeTitle, time, playAdhan, repeatDaily)
+                    repeatDaily -> schedule(context, id, safeTitle, nextDailyTrigger(time, now), playAdhan, true)
+                    else -> prefs.edit().remove(key).apply()
+                }
             }
         }
     }
