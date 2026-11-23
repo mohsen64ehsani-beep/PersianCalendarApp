@@ -14,8 +14,15 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
 object EventReminderScheduler {
+    private const val DAY_MILLIS = 24L * 60L * 60L * 1000L
     private const val CHANNEL_ID = "daynegar_reminders"
     private const val PREFS = "daynegar_reminders"
+
+    internal fun nextDailyTrigger(previousTriggerAtMillis: Long, nowMillis: Long): Long {
+        var next = previousTriggerAtMillis + DAY_MILLIS
+        while (next <= nowMillis) next += DAY_MILLIS
+        return next
+    }
 
     fun schedule(context: Context, id: Int, title: String, triggerAtMillis: Long, playAdhan: Boolean = false, repeatDaily: Boolean = false) {
         if (triggerAtMillis <= System.currentTimeMillis()) return
@@ -24,6 +31,7 @@ object EventReminderScheduler {
             putExtra("reminder_title", title)
             putExtra("play_adhan", playAdhan)
             putExtra("repeat_daily", repeatDaily)
+            putExtra("trigger_at", triggerAtMillis)
         }
         val pending = PendingIntent.getBroadcast(
             context, id, intent,
@@ -66,7 +74,7 @@ object EventReminderScheduler {
         }
     }
 
-    internal fun show(context: Context, id: Int, title: String, playAdhan: Boolean, repeatDaily: Boolean) {
+    internal fun show(context: Context, id: Int, title: String, playAdhan: Boolean, repeatDaily: Boolean, scheduledAtMillis: Long) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = if (playAdhan) "daynegar_adhan" else CHANNEL_ID
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -108,7 +116,7 @@ object EventReminderScheduler {
         ) {
             NotificationManagerCompat.from(context).notify(id, notification)
         }
-        if (repeatDaily) schedule(context, id, title, System.currentTimeMillis() + 24L * 60L * 60L * 1000L, playAdhan, true)
+        if (repeatDaily) schedule(context, id, title, nextDailyTrigger(scheduledAtMillis, System.currentTimeMillis()), playAdhan, true)
         else context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
     }
 }
@@ -120,7 +128,8 @@ class EventReminderReceiver : BroadcastReceiver() {
             intent.getIntExtra("reminder_id", 0),
             intent.getStringExtra("reminder_title") ?: "یادآور",
             intent.getBooleanExtra("play_adhan", false),
-            intent.getBooleanExtra("repeat_daily", false)
+            intent.getBooleanExtra("repeat_daily", false),
+            intent.getLongExtra("trigger_at", System.currentTimeMillis())
         )
     }
 }
