@@ -238,7 +238,7 @@ private fun HafezGhazalCard(accent: Color, visitToken: Int) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             Modifier.fillMaxWidth().background(
@@ -368,7 +368,7 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 7.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Box(Modifier.fillMaxWidth().heightIn(min = 238.dp).clip(RoundedCornerShape(28.dp))) {
                 Image(
@@ -814,7 +814,7 @@ private fun DateConverter(accent: Color) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(25.dp),
             colors = CardDefaults.cardColors(containerColor = if (result == null) accent.copy(alpha = .09f) else MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1197,7 +1197,7 @@ private fun SettingsPage(
                 Text("درباره روزنگار", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CalendarMonth, null, tint = accent)
-                    Text("روزنگار · نسخه ۲٫۲٫۰", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text("روزنگار · نسخه ۲٫۳٫۰", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
                 Text("تقویم شمسی، مناسبت‌های ایران، تبدیل تاریخ، رویدادها و اوقات شرعی در یک همراه روزانه.", color = Muted, fontSize = 11.sp)
             }
