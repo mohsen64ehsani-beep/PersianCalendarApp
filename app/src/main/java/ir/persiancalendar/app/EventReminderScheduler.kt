@@ -46,15 +46,14 @@ object EventReminderScheduler {
             (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pending)
             pending.cancel()
         }
-        if (repeatDaily) schedule(context, id, title, System.currentTimeMillis() + 24L * 60L * 60L * 1000L, playAdhan, true)
-        else context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
     }
 
     fun restoreAfterBoot(context: Context) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs.all.forEach { (key, value) ->
             if (key.startsWith("reminder_") && value is String) {
-                val split = value.split("|", limit = 3)
+                val split = value.split("|", limit = 4)
                 val id = key.removePrefix("reminder_").toIntOrNull() ?: return@forEach
                 val time = split.firstOrNull()?.toLongOrNull() ?: return@forEach
                 val modern = split.size >= 4
@@ -109,7 +108,8 @@ object EventReminderScheduler {
         ) {
             NotificationManagerCompat.from(context).notify(id, notification)
         }
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
+        if (repeatDaily) schedule(context, id, title, System.currentTimeMillis() + 24L * 60L * 60L * 1000L, playAdhan, true)
+        else context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
     }
 }
 
