@@ -174,7 +174,7 @@ private fun CalendarHome(accent: Color) {
                 set(Calendar.MONTH, visibleMonth)
                 set(Calendar.DAY_OF_MONTH, selectedDay.coerceIn(1, monthLength))
             }
-            SimpleDateFormat("EEEE، d MMMM yyyy", Locale("fa", "IR")).format(selected.time)
+            SimpleDateFormat("EEEE، d MMMM yyyy", Locale("fa", "IR")).apply { timeZone = java.util.TimeZone.getTimeZone("Asia/Tehran") }.format(selected.time)
         }.getOrDefault("")
     }
 
@@ -265,7 +265,7 @@ private fun CalendarHome(accent: Color) {
                 val selectedCalendar = persianCalendar().apply {
                     set(Calendar.YEAR, visibleYear); set(Calendar.MONTH, visibleMonth); set(Calendar.DAY_OF_MONTH, selectedDay)
                 }
-                val weekdayOffset = (selectedCalendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
+                val weekdayOffset = selectedCalendar.get(Calendar.DAY_OF_WEEK) % 7
                 val weekStart = (selectedCalendar.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, -weekdayOffset) }
                 Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp)) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -452,7 +452,7 @@ private fun DateConverter(accent: Color) {
                     result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
                         val c=persianCalendar(); c.isLenient=false; c.clear(); c.set(y,m-1,d)
                         c.timeInMillis // Force strict calendar validation before formatting.
-                        SimpleDateFormat("yyyy/MM/dd",Locale.US).format(c.time)
+                        SimpleDateFormat("yyyy/MM/dd",Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("Asia/Tehran") }.format(c.time)
                     }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
                 }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به میلادی")}
             }
@@ -466,7 +466,7 @@ private fun DateConverter(accent: Color) {
                 Button(onClick={
                     val y=num(gy); val m=num(gm); val d=num(gd)
                     result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
-                        val c=GregorianCalendar(); c.isLenient=false; c.clear(); c.set(y,m-1,d); c.timeInMillis
+                        val c=GregorianCalendar(java.util.TimeZone.getTimeZone("Asia/Tehran"), Locale.US); c.isLenient=false; c.clear(); c.set(y,m-1,d); c.timeInMillis
                         val p=persianCalendar(); p.timeInMillis=c.timeInMillis
                         faNumber(p.get(Calendar.YEAR))+"/"+faNumber(p.get(Calendar.MONTH)+1)+"/"+faNumber(p.get(Calendar.DAY_OF_MONTH))
                     }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
