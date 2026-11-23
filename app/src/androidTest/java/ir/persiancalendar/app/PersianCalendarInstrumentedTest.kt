@@ -1,7 +1,8 @@
 package ir.persiancalendar.app
 
 import android.icu.util.Calendar
-import android.icu.util.TimeZone
+import android.icu.util.TimeZone as IcuTimeZone
+import java.util.TimeZone
 import android.icu.util.ULocale
 import java.util.GregorianCalendar
 import java.util.Locale
@@ -13,7 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 @RunWith(AndroidJUnit4::class)
 class PersianCalendarInstrumentedTest {
     private fun persianCalendar() = Calendar.getInstance(
-        TimeZone.getTimeZone("Asia/Tehran"),
+        IcuTimeZone.getTimeZone("Asia/Tehran"),
         ULocale("fa_IR@calendar=persian")
     )
 
