@@ -438,45 +438,74 @@ private fun CalendarHome(accent: Color) {
 
 @Composable
 private fun DateConverter(accent: Color) {
-    var jy by remember { mutableStateOf("۱۴۰۵") }; var jm by remember { mutableStateOf("۱") }; var jd by remember { mutableStateOf("۱") }
-    var gy by remember { mutableStateOf("۲۰۲۶") }; var gm by remember { mutableStateOf("۳") }; var gd by remember { mutableStateOf("۲۱") }
-    var result by remember { mutableStateOf("تاریخ را وارد کنید.") }
-    fun num(s: String): Int? = s.map { if (it in '۰'..'۹') ('0'.code + it.code - '۰'.code).toChar() else it }.joinToString("").toIntOrNull()
-    Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        Text("تبدیل تاریخ", color=Ink, fontSize=24.sp, fontWeight=FontWeight.Bold)
-        Card(colors=CardDefaults.cardColors(containerColor=Color.White), shape=RoundedCornerShape(20.dp)) {
-            Column(Modifier.padding(14.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("شمسی به میلادی", color=accent, fontWeight=FontWeight.Bold)
-                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    DateField("سال",jy,{jy=it},Modifier.weight(1.2f)); DateField("ماه",jm,{jm=it},Modifier.weight(1f)); DateField("روز",jd,{jd=it},Modifier.weight(1f))
+    val initialMillis = remember { System.currentTimeMillis() }
+    val initialPersian = remember { persianCalendar().apply { timeInMillis = initialMillis } }
+    val initialGregorian = remember {
+        GregorianCalendar(java.util.TimeZone.getTimeZone("Asia/Tehran"), Locale.US).apply { timeInMillis = initialMillis }
+    }
+    var jy by remember { mutableStateOf(faNumber(initialPersian.get(Calendar.YEAR))) }
+    var jm by remember { mutableStateOf(faNumber(initialPersian.get(Calendar.MONTH) + 1)) }
+    var jd by remember { mutableStateOf(faNumber(initialPersian.get(Calendar.DAY_OF_MONTH))) }
+    var gy by remember { mutableStateOf(initialGregorian.get(Calendar.YEAR).toString()) }
+    var gm by remember { mutableStateOf((initialGregorian.get(Calendar.MONTH) + 1).toString()) }
+    var gd by remember { mutableStateOf(initialGregorian.get(Calendar.DAY_OF_MONTH).toString()) }
+    var result by remember { mutableStateOf("یکی از تبدیل‌ها را انتخاب کنید.") }
+    fun num(value: String): Int? = value.map {
+        if (it in '۰'..'۹') ('0'.code + it.code - '۰'.code).toChar() else it
+    }.joinToString("").toIntOrNull()
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text("تبدیل تاریخ", color = Ink, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+        Text("تبدیل دقیق دوطرفه با تقویم دستگاه و منطقه زمانی ایران", color = Muted, fontSize = 12.sp)
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("هجری شمسی به میلادی", color = accent, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    DateField("سال", jy, { jy = it }, Modifier.weight(1.2f))
+                    DateField("ماه", jm, { jm = it }, Modifier.weight(1f))
+                    DateField("روز", jd, { jd = it }, Modifier.weight(1f))
                 }
-                Button(onClick={
-                    val y=num(jy); val m=num(jm); val d=num(jd)
-                    result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
-                        val c=persianCalendar(); c.isLenient=false; c.clear(); c.set(y,m-1,d)
-                        c.timeInMillis // Force strict calendar validation before formatting.
-                        SimpleDateFormat("yyyy/MM/dd",Locale.US).apply { timeZone = java.util.TimeZone.getTimeZone("Asia/Tehran") }.format(c.time)
-                    }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
-                }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به میلادی")}
+                Button(onClick = {
+                    val y = num(jy); val m = num(jm); val d = num(jd)
+                    result = if (y != null && y in 1..3000 && m != null && m in 1..12 && d != null && d in 1..31) runCatching {
+                        val c = persianCalendar().apply { isLenient = false; clear(); set(y, m - 1, d) }
+                        c.timeInMillis
+                        SimpleDateFormat("EEEE، yyyy/MM/dd", Locale("fa", "IR"))
+                            .apply { timeZone = java.util.TimeZone.getTimeZone("Asia/Tehran") }.format(c.time)
+                    }.getOrElse { "تاریخ شمسی معتبر نیست." } else "سال، ماه و روز را بررسی کنید."
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = accent)) {
+                    Text("تبدیل به میلادی")
+                }
             }
         }
-        Card(colors=CardDefaults.cardColors(containerColor=Color.White), shape=RoundedCornerShape(20.dp)) {
-            Column(Modifier.padding(14.dp), verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("میلادی به شمسی", color=accent, fontWeight=FontWeight.Bold)
-                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    DateField("سال",gy,{gy=it},Modifier.weight(1.2f)); DateField("ماه",gm,{gm=it},Modifier.weight(1f)); DateField("روز",gd,{gd=it},Modifier.weight(1f))
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("میلادی به هجری شمسی", color = accent, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    DateField("سال", gy, { gy = it }, Modifier.weight(1.2f))
+                    DateField("ماه", gm, { gm = it }, Modifier.weight(1f))
+                    DateField("روز", gd, { gd = it }, Modifier.weight(1f))
                 }
-                Button(onClick={
-                    val y=num(gy); val m=num(gm); val d=num(gd)
-                    result=if(y!=null && m!=null && m in 1..12 && d!=null && d in 1..31) runCatching {
-                        val c=GregorianCalendar(java.util.TimeZone.getTimeZone("Asia/Tehran"), Locale.US); c.isLenient=false; c.clear(); c.set(y,m-1,d); c.timeInMillis
-                        val p=persianCalendar(); p.timeInMillis=c.timeInMillis
-                        faNumber(p.get(Calendar.YEAR))+"/"+faNumber(p.get(Calendar.MONTH)+1)+"/"+faNumber(p.get(Calendar.DAY_OF_MONTH))
-                    }.getOrElse{"تاریخ معتبر نیست."} else "سال، ماه و روز را بررسی کنید."
-                }, modifier=Modifier.fillMaxWidth(), colors=ButtonDefaults.buttonColors(containerColor=accent)){Text("تبدیل به شمسی")}
+                Button(onClick = {
+                    val y = num(gy); val m = num(gm); val d = num(gd)
+                    result = if (y != null && y in 1..9999 && m != null && m in 1..12 && d != null && d in 1..31) runCatching {
+                        val c = GregorianCalendar(java.util.TimeZone.getTimeZone("Asia/Tehran"), Locale.US)
+                            .apply { isLenient = false; clear(); set(y, m - 1, d) }
+                        c.timeInMillis
+                        val p = persianCalendar().apply { timeInMillis = c.timeInMillis }
+                        faNumber(p.get(Calendar.YEAR)) + "/" + faNumber(p.get(Calendar.MONTH) + 1) + "/" + faNumber(p.get(Calendar.DAY_OF_MONTH))
+                    }.getOrElse { "تاریخ میلادی معتبر نیست." } else "سال، ماه و روز را بررسی کنید."
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = accent)) {
+                    Text("تبدیل به شمسی")
+                }
             }
         }
-        Card(colors=CardDefaults.cardColors(containerColor=accent.copy(alpha=.10f)), shape=RoundedCornerShape(18.dp)){Text(result,Modifier.fillMaxWidth().padding(16.dp),color=Ink,textAlign=TextAlign.Center,fontSize=17.sp)}
+        Card(colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = .12f)), shape = RoundedCornerShape(18.dp)) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("نتیجه تبدیل", color = Muted, fontSize = 12.sp)
+                Spacer(Modifier.height(5.dp))
+                Text(result, color = Ink, textAlign = TextAlign.Center, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }
 @Composable
