@@ -87,11 +87,11 @@ private fun PersianCalendarApp() {
     val selectedFont = when (fontChoice) { 1 -> androidx.compose.ui.text.font.FontFamily.Serif; 2 -> androidx.compose.ui.text.font.FontFamily.Monospace; else -> androidx.compose.ui.text.font.FontFamily.SansSerif }
     CompositionLocalProvider(LocalDayPalette provides palette, androidx.compose.material3.LocalContentColor provides palette.ink) {
     MaterialTheme(colorScheme = colors) {
-        CompositionLocalProvider(androidx.compose.material.LocalTextStyle provides androidx.compose.material.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
+        CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
         Scaffold(
             containerColor = CanvasColor,
             bottomBar = {
-                NavigationBar(containerColor = Color.White) {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     NavigationBarItem(selectedTab == 0, { selectedTab = 0 }, icon = { Icon(Icons.Default.CalendarMonth, null) }, label = { Text("تقویم") })
                     NavigationBarItem(selectedTab == 1, { selectedTab = 1 }, icon = { Icon(Icons.Default.CompareArrows, null) }, label = { Text("تبدیل تاریخ") })
                     NavigationBarItem(selectedTab == 2, { selectedTab = 2 }, icon = { Icon(Icons.Default.WbSunny, null) }, label = { Text("اوقات شرعی") })
@@ -226,7 +226,7 @@ private fun CalendarHome(accent: Color) {
             }
         }
         Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(16.dp)).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf("ماه", "هفته", "سال").forEach { mode ->
                 val selected = calendarMode == mode
                 Box(Modifier.weight(1f).background(if (selected) accent else Color.Transparent, RoundedCornerShape(12.dp))
@@ -243,7 +243,7 @@ private fun CalendarHome(accent: Color) {
                     Text(faNumber(visibleYear), color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     IconButton(onClick = { visibleYear++; selectedDay = 1 }) { Icon(Icons.Default.ChevronLeft, "سال بعد", tint = accent) }
                 }
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         MonthNames.chunked(3).forEachIndexed { rowIndex, rowMonths ->
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
