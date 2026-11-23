@@ -186,7 +186,7 @@ val downloadHafeziehPhoto by tasks.registering {
         val output = photo.asFile
         output.parentFile.mkdirs()
         if (!output.exists()) {
-            val url = "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Tomb_of_Hafez%2C_Shiraz%2C_Iran.jpg/960px-Tomb_of_Hafez%2C_Shiraz%2C_Iran.jpg"
+            val url = "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Tomb_of_Hafez%2C_Shiraz%2C_Iran.jpg/960px-Tomb_of_Hafez%2C-Shiraz%2C-Iran.jpg"
             val connection = URL(url).openConnection()
             connection.setRequestProperty("User-Agent", "DaynegarAndroid/1.2 (Hafezieh background; CC BY-SA 4.0)")
             connection.connectTimeout = 20000
