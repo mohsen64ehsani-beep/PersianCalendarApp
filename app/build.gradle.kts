@@ -86,6 +86,41 @@ val downloadCc0Adhan by tasks.registering {
     }
 }
 
+
+val downloadVazirmatnFonts by tasks.registering {
+    val fontDir = layout.projectDirectory.dir("src/main/res/font")
+    val regular = fontDir.file("vazirmatn_regular.ttf")
+    val bold = fontDir.file("vazirmatn_bold.ttf")
+    outputs.files(regular, bold)
+    doLast {
+        val files = listOf(
+            Triple("Vazirmatn-Regular.ttf", "vazirmatn_regular.ttf", "64e4a8189557a17b63fd7a77794207483e592972"),
+            Triple("Vazirmatn-Bold.ttf", "vazirmatn_bold.ttf", "efa9b095da01d299310bdcae293e24e657fe6da9")
+        )
+        files.forEach { (sourceName, targetName, expectedGitBlobSha) ->
+            val output = fontDir.file(targetName).asFile
+            output.parentFile.mkdirs()
+            if (!output.exists()) {
+                val url = "https://raw.githubusercontent.com/rastikerdar/vazirmatn/master/fonts/ttf/$sourceName"
+                val connection = java.net.URL(url).openConnection()
+                connection.connectTimeout = 20000
+                connection.readTimeout = 30000
+                connection.getInputStream().use { input ->
+                    output.outputStream().use { destination -> input.copyTo(destination) }
+                }
+            }
+            val bytes = output.readBytes()
+            val digest = java.security.MessageDigest.getInstance("SHA-1")
+            digest.update("blob ${bytes.size}\u0000".toByteArray(Charsets.UTF_8))
+            digest.update(bytes)
+            val actualGitBlobSha = digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            check(actualGitBlobSha == expectedGitBlobSha) {
+                "Vazirmatn font checksum mismatch for $targetName; refusing to package an unverified font."
+            }
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
-    dependsOn(downloadCc0Adhan)
+    dependsOn(downloadCc0Adhan, downloadVazirmatnFonts)
 }
