@@ -17,12 +17,13 @@ object EventReminderScheduler {
     private const val CHANNEL_ID = "daynegar_reminders"
     private const val PREFS = "daynegar_reminders"
 
-    fun schedule(context: Context, id: Int, title: String, triggerAtMillis: Long, playAdhan: Boolean = false) {
+    fun schedule(context: Context, id: Int, title: String, triggerAtMillis: Long, playAdhan: Boolean = false, repeatDaily: Boolean = false) {
         if (triggerAtMillis <= System.currentTimeMillis()) return
         val intent = Intent(context, EventReminderReceiver::class.java).apply {
             putExtra("reminder_id", id)
             putExtra("reminder_title", title)
             putExtra("play_adhan", playAdhan)
+            putExtra("repeat_daily", repeatDaily)
         }
         val pending = PendingIntent.getBroadcast(
             context, id, intent,
@@ -32,7 +33,7 @@ object EventReminderScheduler {
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pending)
         val soundFlag = if (playAdhan) 1 else 0
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString("reminder_$id", "$triggerAtMillis|$soundFlag|$title").apply()
+            .putString("reminder_$id", "$triggerAtMillis|$soundFlag|${if (repeatDaily) 1 else 0}|$title").apply()
     }
 
     fun cancel(context: Context, id: Int) {
@@ -45,7 +46,8 @@ object EventReminderScheduler {
             (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).cancel(pending)
             pending.cancel()
         }
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
+        if (repeatDaily) schedule(context, id, title, System.currentTimeMillis() + 24L * 60L * 60L * 1000L, playAdhan, true)
+        else context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove("reminder_$id").apply()
     }
 
     fun restoreAfterBoot(context: Context) {
@@ -55,16 +57,17 @@ object EventReminderScheduler {
                 val split = value.split("|", limit = 3)
                 val id = key.removePrefix("reminder_").toIntOrNull() ?: return@forEach
                 val time = split.firstOrNull()?.toLongOrNull() ?: return@forEach
-                val hasSoundField = split.size == 3
-                val playAdhan = hasSoundField && split.getOrNull(1) == "1"
-                val title = if (hasSoundField) split.getOrNull(2) else split.getOrNull(1)
-                if (time > System.currentTimeMillis()) schedule(context, id, title ?: "یادآور", time, playAdhan)
+                val modern = split.size >= 4
+                val playAdhan = split.getOrNull(1) == "1"
+                val repeatDaily = modern && split.getOrNull(2) == "1"
+                val title = if (modern) split.getOrNull(3) else split.getOrNull(2) ?: split.getOrNull(1)
+                if (time > System.currentTimeMillis()) schedule(context, id, title ?: "یادآور", time, playAdhan, repeatDaily)
                 else prefs.edit().remove(key).apply()
             }
         }
     }
 
-    internal fun show(context: Context, id: Int, title: String, playAdhan: Boolean) {
+    internal fun show(context: Context, id: Int, title: String, playAdhan: Boolean, repeatDaily: Boolean) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = if (playAdhan) "daynegar_adhan" else CHANNEL_ID
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -116,7 +119,8 @@ class EventReminderReceiver : BroadcastReceiver() {
             context,
             intent.getIntExtra("reminder_id", 0),
             intent.getStringExtra("reminder_title") ?: "یادآور",
-            intent.getBooleanExtra("play_adhan", false)
+            intent.getBooleanExtra("play_adhan", false),
+            intent.getBooleanExtra("repeat_daily", false)
         )
     }
 }
