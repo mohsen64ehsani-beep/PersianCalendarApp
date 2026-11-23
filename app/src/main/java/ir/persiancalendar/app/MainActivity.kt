@@ -681,7 +681,7 @@ private fun PrayerTimesPage(accent: Color) {
         if (scheduledPrayerReminderCount > 0) {
             Text("${faNumber(scheduledPrayerReminderCount)} اعلان برای شهر ${city.name} تنظیم شد.", color = accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
-        Text("اعلان‌ها با صدای پیش‌فرض اعلان دستگاه پخش می‌شوند؛ برای پخش فایل کامل اذان، انتخاب و بسته‌بندی صدای دارای مجوز در مرحله بعد انجام می‌شود.", color = Muted, fontSize = 11.sp)
+        Text("برای اعلان‌های نماز، فایل اذان دارای مجوز CC0 از کانال اعلان جداگانه پخش می‌شود. صدای کانال را می‌توان از تنظیمات اعلان Android کنترل کرد.", color = Muted, fontSize = 11.sp)
         Text("روش تهران: فجر ۱۷٫۷°، مغرب ۴٫۵° و عشا ۱۴° زیر افق. اختلاف دقیقه‌ای ممکن است به‌دلیل مختصات و گردکردن با جدول محلی متفاوت باشد.", color = Muted, fontSize = 11.sp)
     }
 }
