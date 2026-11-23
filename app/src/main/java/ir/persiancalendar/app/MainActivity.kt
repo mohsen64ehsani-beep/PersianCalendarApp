@@ -377,6 +377,7 @@ private fun CalendarHome(accent: Color) {
                                 modifier = Modifier.clickable {
                                     events = events - event
                                     prefs.edit().putStringSet("events_$eventKey", events.toSet()).apply()
+                                    EventReminderScheduler.cancel(context, (eventKey + "-" + event).hashCode())
                                 }.padding(6.dp))
                         }
                     }
