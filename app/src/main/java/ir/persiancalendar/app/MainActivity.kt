@@ -1,6 +1,9 @@
 package ir.persiancalendar.app
 
 import android.os.Bundle
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.batoulapps.adhan.CalculationMethod
 import com.batoulapps.adhan.Coordinates
 import com.batoulapps.adhan.DateComponents
@@ -155,6 +158,13 @@ private fun CalendarHome(accent: Color) {
     }
     var showAddEvent by remember { mutableStateOf(false) }
     var eventTitle by remember { mutableStateOf("") }
+    var reminderTime by remember { mutableStateOf("09:00") }
+    var pendingReminder by remember { mutableStateOf<Triple<Int, String, Long>?>(null) }
+    val reminderPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        val pending = pendingReminder
+        if (granted && pending != null) EventReminderScheduler.schedule(context, pending.first, pending.second, pending.third)
+        pendingReminder = null
+    }
 
     val selectedGregorian = remember(visibleYear, visibleMonth, selectedDay) {
         runCatching {
@@ -346,7 +356,7 @@ private fun CalendarHome(accent: Color) {
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { eventTitle = ""; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
+            TextButton(onClick = { eventTitle = ""; reminderTime = "09:00"; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
         }
         Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
             if (events.isEmpty()) {
@@ -372,12 +382,21 @@ private fun CalendarHome(accent: Color) {
                 onDismissRequest = { showAddEvent = false },
                 title = { Text("رویداد جدید") },
                 text = {
-                    OutlinedTextField(
-                        value = eventTitle,
-                        onValueChange = { eventTitle = it.take(80) },
-                        label = { Text("عنوان رویداد") },
-                        singleLine = true
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(
+                            value = eventTitle,
+                            onValueChange = { eventTitle = it.take(80) },
+                            label = { Text("عنوان رویداد") },
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = reminderTime,
+                            onValueChange = { reminderTime = it.filter { ch -> ch.isDigit() || ch == ':' }.take(5) },
+                            label = { Text("ساعت یادآوری (مثلاً 09:30)") },
+                            singleLine = true
+                        )
+                        Text("با ذخیره رویداد، در صورت مجاز بودن اعلان‌ها، یادآوری در ساعت انتخاب‌شده تنظیم می‌شود.", color = Muted, fontSize = 11.sp)
+                    }
                 },
                 confirmButton = {
                     TextButton(onClick = {
@@ -385,6 +404,24 @@ private fun CalendarHome(accent: Color) {
                         if (title.isNotEmpty()) {
                             events = (events + title).distinct()
                             prefs.edit().putStringSet("events_$eventKey", events.toSet()).apply()
+                            val parts = reminderTime.split(":")
+                            val hour = parts.getOrNull(0)?.toIntOrNull()
+                            val minute = parts.getOrNull(1)?.toIntOrNull()
+                            if (hour != null && hour in 0..23 && minute != null && minute in 0..59) {
+                                val alarmDate = persianCalendar().apply {
+                                    set(Calendar.YEAR, visibleYear); set(Calendar.MONTH, visibleMonth); set(Calendar.DAY_OF_MONTH, selectedDay)
+                                    set(Calendar.HOUR_OF_DAY, hour); set(Calendar.MINUTE, minute); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                                }.timeInMillis
+                                if (alarmDate > System.currentTimeMillis()) {
+                                    val reminderId = (eventKey + "-" + title).hashCode()
+                                    if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                        pendingReminder = Triple(reminderId, title, alarmDate)
+                                        reminderPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        EventReminderScheduler.schedule(context, reminderId, title, alarmDate)
+                                    }
+                                }
+                            }
                             showAddEvent = false
                         }
                     }) { Text("ذخیره") }
