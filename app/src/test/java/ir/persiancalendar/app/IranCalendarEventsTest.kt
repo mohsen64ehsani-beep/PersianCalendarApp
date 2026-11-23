@@ -62,4 +62,18 @@ class IranCalendarEventsTest {
         assertTrue(IranCalendarEvents.forMonth(1406, 9).any { it.second.title.contains("جزایر سه‌گانه") })
     }
 
+    @Test
+    fun overlappingCuratedListsDoNotShowDuplicateOccasions() {
+        val events = IranCalendarEvents.forDate(1405, 4, 7)
+        assertEquals(events.map { it.title }.distinct().size, events.size)
+        assertEquals(1, events.count { it.title.contains("قوه قضاییه") })
+    }
+
+    @Test
+    fun monthListingDoesNotDuplicateSameOccasion() {
+        val events = IranCalendarEvents.forMonth(1405, 6)
+        val keys = events.map { it.first to it.second.title }
+        assertEquals(keys.distinct().size, keys.size)
+    }
+
 }
