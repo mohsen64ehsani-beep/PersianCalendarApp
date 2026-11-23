@@ -4,11 +4,14 @@ import android.os.Bundle
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.batoulapps.adhan.CalculationMethod
-import com.batoulapps.adhan.Coordinates
-import com.batoulapps.adhan.DateComponents
-import com.batoulapps.adhan.Madhab
-import com.batoulapps.adhan.PrayerTimes
+import io.github.abdulwaheds.prayertimeplus.CalculationMethod
+import io.github.abdulwaheds.prayertimeplus.CalculationParameters
+import io.github.abdulwaheds.prayertimeplus.Coordinates
+import io.github.abdulwaheds.prayertimeplus.DateComponents
+import io.github.abdulwaheds.prayertimeplus.Madhab
+import io.github.abdulwaheds.prayertimeplus.PrayerTimes
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import android.icu.util.Calendar
 import android.icu.util.ULocale
 import android.icu.util.GregorianCalendar
@@ -505,21 +508,34 @@ private fun PrayerTimesPage(accent: Color) {
         while (true) { now = System.currentTimeMillis(); kotlinx.coroutines.delay(60_000) }
     }
     val city = IranianCities[cityIndex]
-    val methodNames = listOf("کراچی", "مسلمانان جهان", "مصر")
+    val methodNames = listOf("روش رسمی تهران", "مسلمانان جهان", "کراچی")
     val prayerData = remember(now, cityIndex, methodIndex) {
         runCatching {
             val zone = java.util.TimeZone.getTimeZone("Asia/Tehran")
             val localCalendar = GregorianCalendar(zone).apply { timeInMillis = now }
             val date = DateComponents(localCalendar.get(Calendar.YEAR), localCalendar.get(Calendar.MONTH) + 1, localCalendar.get(Calendar.DAY_OF_MONTH))
-            val coordinates = Coordinates(city.latitude, city.longitude)
+            val coordinates = Coordinates(latitude = city.latitude, longitude = city.longitude, altitude = 0.0)
             val params = when (methodIndex) {
-                1 -> CalculationMethod.MUSLIM_WORLD_LEAGUE.getParameters()
-                2 -> CalculationMethod.EGYPTIAN.getParameters()
-                else -> CalculationMethod.KARACHI.getParameters()
+                1 -> CalculationMethod.MUSLIM_WORLD_LEAGUE.parameters()
+                2 -> CalculationMethod.KARACHI.parameters()
+                else -> CalculationMethod.OTHER.parameters().copy(
+                    fajrAngle = 17.7,
+                    maghribIsInterval = false,
+                    maghribValue = 4.5,
+                    ishaIsInterval = false,
+                    ishaValue = 14.0,
+                    madhab = Madhab.SHAFI
+                )
             }
-            params.madhab = Madhab.SHAFI
-            val times = PrayerTimes(coordinates, date, params)
-            val formatter = SimpleDateFormat("HH:mm", Locale("fa", "IR")).apply { timeZone = zone }
+            val times = PrayerTimes(
+                coordinates = coordinates,
+                dateComponents = date,
+                calculationParameters = params,
+                utcOffset = ZoneOffset.ofHoursMinutes(3, 30),
+                countryCode = "IR",
+                cityName = city.name
+            )
+            val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale("fa", "IR"))
             listOf(
                 "اذان صبح" to times.fajr,
                 "طلوع آفتاب" to times.sunrise,
@@ -527,7 +543,7 @@ private fun PrayerTimesPage(accent: Color) {
                 "اذان عصر" to times.asr,
                 "اذان مغرب" to times.maghrib,
                 "اذان عشا" to times.isha
-            ).map { it.first to formatter.format(it.second) }
+            ).mapNotNull { (label, time) -> time?.let { label to formatter.format(it) } }
         }.getOrElse { emptyList() }
     }
     val dateLabel = remember(now) {
