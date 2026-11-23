@@ -139,12 +139,19 @@ private fun PersianCalendarApp() {
     }
     var fontChoice by remember { mutableIntStateOf(preferences.getInt("font_choice", 1).coerceIn(0, 3)) }
     val accent = listOf(Purple, Color(0xFF087E9B), Color(0xFF16845B), Color(0xFFB65C83), Color(0xFFB58A35))[themeIndex]
-    val palette = if (darkMode) DayPalette(Color(0xFFF1EFF8), Color(0xFFB8B4C7), Color(0xFF15141B), Color(0xFF24222D))
-        else DayPalette(Color(0xFF202033), Color(0xFF77778A), Color(0xFFF6F4FA), Color.White)
-    val colors = if (darkMode) darkColorScheme(primary = accent, secondary = accent, tertiary = accent,
-        background = palette.canvas, surface = palette.surface, onBackground = palette.ink, onSurface = palette.ink)
-        else lightColorScheme(primary = accent, secondary = accent, tertiary = accent,
-        background = palette.canvas, surface = palette.surface, onBackground = palette.ink, onSurface = palette.ink)
+    val palette = if (darkMode) DayPalette(Color(0xFFE9EDF3), Color(0xFF9BA8B7), Color(0xFF101820), Color(0xFF19232D))
+        else DayPalette(Color(0xFF18232D), Color(0xFF71808D), Color(0xFFF4F6F8), Color(0xFFFFFFFF))
+    val colors = if (darkMode) darkColorScheme(
+        primary = accent, onPrimary = Color(0xFF101820), secondary = accent, tertiary = accent,
+        background = palette.canvas, surface = palette.surface, surfaceVariant = Color(0xFF24313D),
+        onBackground = palette.ink, onSurface = palette.ink, onSurfaceVariant = palette.muted,
+        outline = Color(0xFF40505D), surfaceTint = Color.Transparent
+    ) else lightColorScheme(
+        primary = accent, onPrimary = Color.White, secondary = accent, tertiary = accent,
+        background = palette.canvas, surface = palette.surface, surfaceVariant = Color(0xFFEBF0F3),
+        onBackground = palette.ink, onSurface = palette.ink, onSurfaceVariant = palette.muted,
+        outline = Color(0xFFDCE3E8), surfaceTint = Color.Transparent
+    )
     val selectedFont = when (fontChoice) {
         1 -> androidx.compose.ui.text.font.FontFamily(
             androidx.compose.ui.text.font.Font(R.font.vazirmatn_regular, FontWeight.Normal),
@@ -161,12 +168,29 @@ private fun PersianCalendarApp() {
         else -> androidx.compose.ui.text.font.FontFamily.SansSerif
     }
     CompositionLocalProvider(LocalDayPalette provides palette, androidx.compose.material3.LocalContentColor provides palette.ink) {
-    MaterialTheme(colorScheme = colors, shapes = Shapes(extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(13.dp), medium = RoundedCornerShape(19.dp), large = RoundedCornerShape(26.dp), extraLarge = RoundedCornerShape(32.dp))) {
+    MaterialTheme(
+        colorScheme = colors,
+        shapes = Shapes(
+            extraSmall = RoundedCornerShape(8.dp),
+            small = RoundedCornerShape(12.dp),
+            medium = RoundedCornerShape(18.dp),
+            large = RoundedCornerShape(24.dp),
+            extraLarge = RoundedCornerShape(30.dp)
+        ),
+        typography = Typography(
+            headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.6).sp),
+            headlineMedium = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp),
+            titleLarge = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            titleMedium = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            bodyLarge = MaterialTheme.typography.bodyLarge.copy(lineHeight = 26.sp),
+            bodyMedium = MaterialTheme.typography.bodyMedium.copy(lineHeight = 23.sp)
+        )
+    ) {
         CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
         Scaffold(
             containerColor = CanvasColor,
             bottomBar = {
-                NavigationBar(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp).clip(RoundedCornerShape(25.dp)).border(1.dp, accent.copy(alpha = if (darkMode) .24f else .10f), RoundedCornerShape(25.dp)), containerColor = MaterialTheme.colorScheme.surface, contentColor = Ink, tonalElevation = 0.dp, windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)) {
+                NavigationBar(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp).clip(RoundedCornerShape(22.dp)).border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), RoundedCornerShape(22.dp)), containerColor = MaterialTheme.colorScheme.surface, contentColor = Ink, tonalElevation = 0.dp, windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)) {
                     NavigationBarItem(selectedTab == 0, { selectedTab = 0; calendarVisit++ }, icon = { Icon(Icons.Default.CalendarMonth, null) }, label = { Text("تقویم", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
                     NavigationBarItem(selectedTab == 1, { selectedTab = 1 }, icon = { Icon(Icons.Default.CompareArrows, null) }, label = { Text("تبدیل تاریخ", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
                     NavigationBarItem(selectedTab == 2, { selectedTab = 2 }, icon = { Icon(Icons.Default.WbSunny, null) }, label = { Text("اوقات شرعی", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
@@ -739,15 +763,15 @@ private fun DateConverter(accent: Color) {
                 }
                 if (direction == 0) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DateField("سال", jy, { jy = it }, Modifier.weight(1.1f))
-                        PersianMonthMenu(jm, { jm = it }, accent, Modifier.weight(1.2f))
-                        DateField("روز", jd, { jd = it }, Modifier.weight(.8f))
+                        DateChoiceMenu("سال", jy, (1300..1500).map(::faNumber), { jy = it }, accent, Modifier.weight(1.1f))
+                        DateChoiceMenu("ماه", MonthNames[jm - 1], MonthNames, { value -> jm = MonthNames.indexOf(value) + 1 }, accent, Modifier.weight(1.2f))
+                        DateChoiceMenu("روز", jd, (1..31).map(::faNumber), { jd = it }, accent, Modifier.weight(.8f))
                     }
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DateField("سال", gy, { gy = it }, Modifier.weight(1.1f))
-                        GregorianMonthMenu(gm, { gm = it }, accent, Modifier.weight(1.2f))
-                        DateField("روز", gd, { gd = it }, Modifier.weight(.8f))
+                        DateChoiceMenu("سال", gy, (1900..2100).map(Int::toString), { gy = it }, accent, Modifier.weight(1.1f))
+                        DateChoiceMenu("ماه", GregorianMonthNames[gm - 1], GregorianMonthNames, { value -> gm = GregorianMonthNames.indexOf(value) + 1 }, accent, Modifier.weight(1.2f))
+                        DateChoiceMenu("روز", gd, (1..31).map(Int::toString), { gd = it }, accent, Modifier.weight(.8f))
                     }
                 }
                 Button(
@@ -810,40 +834,51 @@ private fun DateConverter(accent: Color) {
     }
 }
 
-@Composable
-private fun PersianMonthMenu(selected: Int, onSelect: (Int) -> Unit, accent: Color, modifier: Modifier) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier) {
-        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-            Text(MonthNames[selected - 1], maxLines = 1)
-            Text("⌄", modifier = Modifier.padding(start = 3.dp))
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, shape = RoundedCornerShape(16.dp), containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
-            MonthNames.forEachIndexed { index, month ->
-                DropdownMenuItem(text = { Text(month) }, onClick = { onSelect(index + 1); expanded = false })
-            }
-        }
-    }
-}
 private val GregorianMonthNames = listOf("ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوئن", "ژوئیه", "اوت", "سپتامبر", "اکتبر", "نوامبر", "دسامبر")
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun GregorianMonthMenu(selected: Int, onSelect: (Int) -> Unit, accent: Color, modifier: Modifier) {
+private fun DateChoiceMenu(
+    label: String,
+    selected: String,
+    options: List<String>,
+    onSelect: (String) -> Unit,
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
     var expanded by remember { mutableStateOf(false) }
-    Box(modifier) {
-        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-            Text(GregorianMonthNames[selected - 1], maxLines = 1)
-            Text("⌄", modifier = Modifier.padding(start = 3.dp))
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            GregorianMonthNames.forEachIndexed { index, month ->
-                DropdownMenuItem(text = { Text(month) }, onClick = { onSelect(index + 1); expanded = false })
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, color = Muted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        Box {
+            Surface(
+                onClick = { expanded = true },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .62f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .7f))
+            ) {
+                Row(Modifier.padding(horizontal = 11.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(selected, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Icon(Icons.Default.ExpandMore, null, tint = accent, modifier = Modifier.size(19.dp))
+                }
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.heightIn(max = 300.dp),
+                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option, color = if (option == selected) accent else Ink, fontWeight = if (option == selected) FontWeight.Bold else FontWeight.Normal) },
+                        trailingIcon = if (option == selected) ({ Icon(Icons.Default.Check, null, tint = accent) }) else null,
+                        onClick = { onSelect(option); expanded = false }
+                    )
+                }
             }
         }
     }
-}
-@Composable
-private fun DateField(label:String,value:String,onValue:(String)->Unit,modifier:Modifier=Modifier){
-    OutlinedTextField(value=value,onValueChange={onValue(it.filter{ch->ch.isDigit() || ch in '۰'..'۹'}.take(4))},label={Text(label)},modifier=modifier,singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
 }
 private data class PrayerMoment(val title: String, val atMillis: Long)
 
@@ -896,31 +931,21 @@ private val IranianCities = listOf(
 
 @Composable
 private fun DaynegarSectionHero(title: String, subtitle: String, accent: Color) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF172C3B)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = .65f), RoundedCornerShape(22.dp))
+            .padding(horizontal = 18.dp, vertical = 17.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        Box(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(
-                Brush.linearGradient(listOf(Color(0xFF142A3B), Color(0xFF294B5B), accent.copy(alpha = .92f)))
-            ).padding(horizontal = 19.dp, vertical = 21.dp)
-        ) {
-            Box(Modifier.align(Alignment.TopEnd).size(118.dp).offset(x = 28.dp, y = (-42).dp)
-                .background(Brush.radialGradient(listOf(Color.White.copy(alpha = .17f), Color.Transparent)), CircleShape))
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(54.dp).background(Color.White.copy(alpha = .13f), RoundedCornerShape(18.dp))
-                    .border(1.dp, Color.White.copy(alpha = .18f), RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(27.dp))
-                }
-                Column(Modifier.weight(1f).padding(start = 13.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text("DAYNEGAR  /  DAILY COMPANION", color = Color.White.copy(alpha = .62f), fontSize = 8.sp, letterSpacing = 1.5.sp)
-                    Text(title, color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
-                    Text(subtitle, color = Color.White.copy(alpha = .78f), fontSize = 11.sp, lineHeight = 18.sp)
-                }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.size(34.dp).background(accent.copy(alpha = .11f), RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.AutoAwesome, null, tint = accent, modifier = Modifier.size(18.dp))
             }
+            Text("روزنگار  /  DAYNEGAR", color = accent, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.1.sp)
         }
+        Text(title, color = Ink, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-.4).sp)
+        Text(subtitle, color = Muted, fontSize = 12.sp, lineHeight = 20.sp)
     }
 }
 
