@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import io.github.abdulwaheds.prayertimeplus.CalculationMethod
-import io.github.abdulwaheds.prayertimeplus.CalculationParameters
 import io.github.abdulwaheds.prayertimeplus.Coordinates
 import io.github.abdulwaheds.prayertimeplus.DateComponents
 import io.github.abdulwaheds.prayertimeplus.Madhab
@@ -14,7 +13,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import android.icu.util.Calendar
 import android.icu.util.ULocale
-import android.icu.util.GregorianCalendar
+import java.util.GregorianCalendar
 import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.foundation.text.KeyboardOptions
