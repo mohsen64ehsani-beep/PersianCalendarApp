@@ -1,10 +1,6 @@
 name: Android Release Build
 run-name: Signed Android release (${{ github.ref_name }})
 "on":
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 concurrency:
   group: android-release-${{ github.ref }}
