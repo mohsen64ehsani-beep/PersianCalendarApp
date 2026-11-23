@@ -1,3 +1,6 @@
+import java.net.URL
+import java.security.MessageDigest
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -71,14 +74,14 @@ val downloadCc0Adhan by tasks.registering {
         val output = audioFile.asFile
         output.parentFile.mkdirs()
         if (!output.exists()) {
-            val connection = java.net.URL("https://upload.wikimedia.org/wikipedia/commons/e/e7/Adhan.ogg").openConnection()
+            val connection = URL("https://upload.wikimedia.org/wikipedia/commons/e/e7/Adhan.ogg").openConnection()
             connection.connectTimeout = 20000
             connection.readTimeout = 30000
             connection.getInputStream().use { input ->
                 output.outputStream().use { destination -> input.copyTo(destination) }
             }
         }
-        val digest = java.security.MessageDigest.getInstance("SHA-1").digest(output.readBytes())
+        val digest = MessageDigest.getInstance("SHA-1").digest(output.readBytes())
             .joinToString("") { "%02x".format(it.toInt() and 0xff) }
         check(digest == "b86432f1581e11f898de1dc3402af0d541af110e") {
             "CC0 Adhan audio checksum mismatch; refusing to package an unverified file."
@@ -102,7 +105,7 @@ val downloadVazirmatnFonts by tasks.registering {
             output.parentFile.mkdirs()
             if (!output.exists()) {
                 val url = "https://raw.githubusercontent.com/rastikerdar/vazirmatn/master/fonts/ttf/$sourceName"
-                val connection = java.net.URL(url).openConnection()
+                val connection = URL(url).openConnection()
                 connection.connectTimeout = 20000
                 connection.readTimeout = 30000
                 connection.getInputStream().use { input ->
@@ -110,7 +113,7 @@ val downloadVazirmatnFonts by tasks.registering {
                 }
             }
             val bytes = output.readBytes()
-            val digest = java.security.MessageDigest.getInstance("SHA-1")
+            val digest = MessageDigest.getInstance("SHA-1")
             digest.update("blob ${bytes.size}\u0000".toByteArray(Charsets.UTF_8))
             digest.update(bytes)
             val actualGitBlobSha = digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
