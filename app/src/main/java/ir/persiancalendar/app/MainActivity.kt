@@ -266,7 +266,7 @@ private fun CalendarHome(accent: Color) {
                                     val monthIndex = rowIndex * 3 + colIndex
                                     val active = monthIndex == visibleMonth
                                     Box(Modifier.weight(1f).background(if (active) accent.copy(alpha = .12f) else CanvasColor, RoundedCornerShape(14.dp))
-                                        .clickable { visibleMonth = monthIndex; calendarMode = "ماه" }
+                                        .clickable { visibleMonth = monthIndex; selectedDay = 1; calendarMode = "ماه" }
                                         .padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
                                         Text(monthName, color = if (active) accent else Ink, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium, fontSize = 12.sp)
                                     }
