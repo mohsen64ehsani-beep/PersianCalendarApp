@@ -26,6 +26,18 @@ class IranCalendarEventsTest {
     }
 
     @Test
+    fun year1406ContainsTwentyEightOfficialHolidayEntries() {
+        val count = (1..12).sumOf { month -> (1..31).count { day -> IranCalendarEvents.isHoliday(1406, month, day) } }
+        assertEquals(28, count)
+    }
+
+    @Test
+    fun year1406IncludesImportantNonHolidayOccasions() {
+        assertFalse(IranCalendarEvents.forDate(1406, 1, 25).isEmpty())
+        assertFalse(IranCalendarEvents.forDate(1406, 9, 30).isEmpty())
+    }
+
+    @Test
     fun unsupportedYearsReturnNoOfficialEvents() {
         assertEquals(emptyList<IranCalendarOccasion>(), IranCalendarEvents.forDate(1407, 1, 1))
     }
