@@ -66,8 +66,41 @@ object IranCalendarEvents {
         (12 to 29) to listOf(IranCalendarOccasion("روز ملی شدن صنعت نفت ایران", true))
     )
 
+    private val year1406 = mapOf(
+        (1 to 1) to listOf(IranCalendarOccasion("عید نوروز و آغاز سال نو", true)),
+        (1 to 2) to listOf(IranCalendarOccasion("تعطیلات عید نوروز", true)),
+        (1 to 3) to listOf(IranCalendarOccasion("تعطیلات عید نوروز", true)),
+        (1 to 4) to listOf(IranCalendarOccasion("تعطیلات عید نوروز", true)),
+        (1 to 12) to listOf(IranCalendarOccasion("روز جمهوری اسلامی ایران", true)),
+        (1 to 13) to listOf(IranCalendarOccasion("روز طبیعت", true)),
+        (1 to 14) to listOf(IranCalendarOccasion("شهادت امام جعفر صادق (ع)", true)),
+        (2 to 27) to listOf(IranCalendarOccasion("عید سعید قربان", true)),
+        (3 to 4) to listOf(IranCalendarOccasion("عید سعید غدیر خم", true)),
+        (3 to 14) to listOf(IranCalendarOccasion("رحلت امام خمینی (ره)", true)),
+        (3 to 15) to listOf(IranCalendarOccasion("قیام ۱۵ خرداد", true)),
+        (3 to 24) to listOf(IranCalendarOccasion("تاسوعای حسینی", true)),
+        (3 to 25) to listOf(IranCalendarOccasion("عاشورای حسینی", true)),
+        (5 to 3) to listOf(IranCalendarOccasion("اربعین حسینی", true)),
+        (5 to 11) to listOf(IranCalendarOccasion("رحلت پیامبر اکرم (ص) و شهادت امام حسن مجتبی (ع)", true)),
+        (5 to 20) to listOf(IranCalendarOccasion("شهادت امام حسن عسکری (ع)", true)),
+        (5 to 29) to listOf(IranCalendarOccasion("ولادت پیامبر اکرم (ص) و امام جعفر صادق (ع)", true)),
+        (8 to 11) to listOf(IranCalendarOccasion("شهادت حضرت فاطمه زهرا (س)", true)),
+        (9 to 21) to listOf(IranCalendarOccasion("ولادت امام علی (ع) و روز پدر", true)),
+        (10 to 5) to listOf(IranCalendarOccasion("مبعث پیامبر اکرم (ص)", true)),
+        (10 to 22) to listOf(IranCalendarOccasion("ولادت حضرت قائم (عج) و نیمه شعبان", true)),
+        (11 to 22) to listOf(IranCalendarOccasion("پیروزی انقلاب اسلامی ایران", true)),
+        (11 to 28) to listOf(IranCalendarOccasion("شهادت امام علی (ع)", true)),
+        (12 to 8) to listOf(IranCalendarOccasion("عید سعید فطر", true)),
+        (12 to 9) to listOf(IranCalendarOccasion("تعطیل به مناسبت عید سعید فطر", true)),
+        (12 to 29) to listOf(IranCalendarOccasion("روز ملی شدن صنعت نفت ایران", true))
+    )
+
     fun forDate(year: Int, month: Int, day: Int): List<IranCalendarOccasion> =
-        if (year == 1405) year1405[month to day].orEmpty() else emptyList()
+        when (year) {
+            1405 -> year1405[month to day].orEmpty()
+            1406 -> year1406[month to day].orEmpty()
+            else -> emptyList()
+        }
 
     fun isHoliday(year: Int, month: Int, day: Int): Boolean =
         forDate(year, month, day).any { it.isHoliday }
