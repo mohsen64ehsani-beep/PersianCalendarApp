@@ -892,6 +892,34 @@ private val IranianCities = listOf(
     IranianCity("یزد", 31.8974, 54.3569)
 )
 
+
+@Composable
+private fun DaynegarSectionHero(title: String, subtitle: String, accent: Color) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF203747)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Box(
+            Modifier.fillMaxWidth().background(
+                Brush.linearGradient(listOf(Color(0xFF203747), accent.copy(alpha = .82f), Color(0xFF426B70))),
+                RoundedCornerShape(24.dp)
+            ).padding(horizontal = 18.dp, vertical = 20.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(48.dp).background(Color.White.copy(alpha = .14f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(25.dp))
+                }
+                Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(subtitle, color = Color.White.copy(alpha = .78f), fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun PrayerTimesPage(accent: Color) {
     val context = LocalContext.current
@@ -960,10 +988,7 @@ private fun PrayerTimesPage(accent: Color) {
     }
     val nextPrayer = prayerMoments.firstOrNull { it.atMillis > now }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("اوقات شرعی", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
-            Text(dateLabel + " · محاسبه بر پایه موقعیت شهر انتخابی", color = Muted, fontSize = 12.sp)
-        }
+        DaynegarSectionHero("اوقات شرعی", dateLabel + " · محاسبه بر پایه موقعیت شهر انتخابی", accent)
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = accent)) {
             Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(accent, accent.copy(alpha = .78f), Color(0xFF263653))), RoundedCornerShape(28.dp)).padding(20.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1067,10 +1092,7 @@ private fun SettingsPage(
     val fontSamples = listOf("نمونه نمایش متن فارسی", "روزنگار؛ همراه هر روز", "تقویم هوشمند زندگی", "لحظه‌ها را به خاطر بسپار")
     val surface = MaterialTheme.colorScheme.surface
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(15.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("تنظیمات روزنگار", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
-            Text("تجربه تقویم را مطابق سلیقه و نیازت شخصی‌سازی کن.", color = Muted, fontSize = 12.sp)
-        }
+        DaynegarSectionHero("تنظیمات روزنگار", "رنگ، قلم و شیوه نمایش را مطابق سلیقه‌ات تنظیم کن.", accent)
         Card(colors = CardDefaults.cardColors(containerColor = accent), shape = RoundedCornerShape(25.dp)) {
             Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(50.dp).background(Color.White.copy(alpha = .16f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
