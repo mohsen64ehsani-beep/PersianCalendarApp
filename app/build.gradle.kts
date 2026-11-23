@@ -13,8 +13,8 @@ android {
         applicationId = "ir.persiancalendar.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "1.0.0"
+        versionCode = 12
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
@@ -125,6 +125,58 @@ val downloadVazirmatnFonts by tasks.registering {
     }
 }
 
+
+val downloadAdditionalPersianFonts by tasks.registering {
+    val fontDir = layout.projectDirectory.dir("src/main/res/font")
+    val licenseDir = layout.projectDirectory.dir("src/main/assets/licenses")
+    val fontFiles = listOf(
+        Triple("https://raw.githubusercontent.com/aminabedi68/Estedad/master/fonts/ttf/Estedad-Regular.ttf", "estedad_regular.ttf", "450fe89141fa068d1111f86e4d8d5d644e297bdd"),
+        Triple("https://raw.githubusercontent.com/aminabedi68/Estedad/master/fonts/ttf/Estedad-Bold.ttf", "estedad_bold.ttf", "d32ef246f3c29747fb3466b67388cbe924fea347"),
+        Triple("https://raw.githubusercontent.com/rastikerdar/sahel-font/master/dist/Farsi-Digits/Sahel-FD.ttf", "sahel_regular.ttf", "c46796870a40335346764a05f14c61c30b533381"),
+        Triple("https://raw.githubusercontent.com/rastikerdar/sahel-font/master/dist/Farsi-Digits/Sahel-Bold-FD.ttf", "sahel_bold.ttf", "e8a98f8d87a1bc7fb0ff56115704d26852c630e7")
+    )
+    outputs.files(fontFiles.map { fontDir.file(it.second) })
+    doLast {
+        fontFiles.forEach { (url, name, expectedSha) ->
+            val output = fontDir.file(name).asFile
+            output.parentFile.mkdirs()
+            if (!output.exists()) {
+                val connection = URL(url).openConnection()
+                connection.setRequestProperty("User-Agent", "DaynegarAndroidBuild/1.0")
+                connection.connectTimeout = 20000
+                connection.readTimeout = 30000
+                connection.getInputStream().use { input ->
+                    output.outputStream().use { destination -> input.copyTo(destination) }
+                }
+            }
+            val bytes = output.readBytes()
+            val digest = MessageDigest.getInstance("SHA-1")
+            digest.update("blob ${bytes.size}\u0000".toByteArray(Charsets.UTF_8))
+            digest.update(bytes)
+            val actual = digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            check(actual == expectedSha) { "Persian font checksum mismatch for $name" }
+        }
+        val licenses = listOf(
+            "https://raw.githubusercontent.com/aminabedi68/Estedad/master/OFL.txt" to "estedad_ofl.txt",
+            "https://raw.githubusercontent.com/rastikerdar/sahel-font/master/LICENSE" to "sahel_ofl.txt"
+        )
+        licenses.forEach { (url, name) ->
+            val output = licenseDir.file(name).asFile
+            output.parentFile.mkdirs()
+            if (!output.exists()) {
+                val connection = URL(url).openConnection()
+                connection.setRequestProperty("User-Agent", "DaynegarAndroidBuild/1.0")
+                connection.connectTimeout = 20000
+                connection.readTimeout = 30000
+                connection.getInputStream().use { input ->
+                    output.outputStream().use { destination -> input.copyTo(destination) }
+                }
+            }
+            check(output.length() > 1000) { "Missing or invalid font license: $name" }
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
-    dependsOn(downloadCc0Adhan, downloadVazirmatnFonts)
+    dependsOn(downloadCc0Adhan, downloadVazirmatnFonts, downloadAdditionalPersianFonts)
 }
