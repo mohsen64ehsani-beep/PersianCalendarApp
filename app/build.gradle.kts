@@ -177,6 +177,31 @@ val downloadAdditionalPersianFonts by tasks.registering {
     }
 }
 
+
+
+val downloadHafeziehPhoto by tasks.registering {
+    val photo = layout.projectDirectory.file("src/main/res/drawable-nodpi/hafezieh_background.jpg")
+    outputs.file(photo)
+    doLast {
+        val output = photo.asFile
+        output.parentFile.mkdirs()
+        if (!output.exists()) {
+            val url = "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Tomb_of_Hafez%2C_Shiraz%2C_Iran.jpg/960px-Tomb_of_Hafez%2C_Shiraz%2C_Iran.jpg"
+            val connection = URL(url).openConnection()
+            connection.setRequestProperty("User-Agent", "DaynegarAndroid/1.2 (Hafezieh background; CC BY-SA 4.0)")
+            connection.connectTimeout = 20000
+            connection.readTimeout = 30000
+            connection.getInputStream().use { input ->
+                output.outputStream().use { destination -> input.copyTo(destination) }
+            }
+        }
+        val bytes = output.readBytes()
+        check(bytes.size > 50000 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte() && bytes[2] == 0xFF.toByte()) {
+            "Hafezieh background download is incomplete or not a JPEG."
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
-    dependsOn(downloadCc0Adhan, downloadVazirmatnFonts, downloadAdditionalPersianFonts)
+    dependsOn(downloadCc0Adhan, downloadVazirmatnFonts, downloadAdditionalPersianFonts, downloadHafeziehPhoto)
 }
