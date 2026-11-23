@@ -161,17 +161,17 @@ private fun PersianCalendarApp() {
         else -> androidx.compose.ui.text.font.FontFamily.SansSerif
     }
     CompositionLocalProvider(LocalDayPalette provides palette, androidx.compose.material3.LocalContentColor provides palette.ink) {
-    MaterialTheme(colorScheme = colors) {
+    MaterialTheme(colorScheme = colors, shapes = Shapes(extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(13.dp), medium = RoundedCornerShape(19.dp), large = RoundedCornerShape(26.dp), extraLarge = RoundedCornerShape(32.dp))) {
         CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = selectedFont)) {
         Scaffold(
             containerColor = CanvasColor,
             bottomBar = {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                    NavigationBarItem(selectedTab == 0, { selectedTab = 0; calendarVisit++ }, icon = { Icon(Icons.Default.CalendarMonth, null) }, label = { Text("تقویم") })
-                    NavigationBarItem(selectedTab == 1, { selectedTab = 1 }, icon = { Icon(Icons.Default.CompareArrows, null) }, label = { Text("تبدیل تاریخ") })
-                    NavigationBarItem(selectedTab == 2, { selectedTab = 2 }, icon = { Icon(Icons.Default.WbSunny, null) }, label = { Text("اوقات شرعی") })
-                    NavigationBarItem(selectedTab == 3, { selectedTab = 3 }, icon = { Icon(Icons.Default.Build, null) }, label = { Text("امکانات") })
-                    NavigationBarItem(selectedTab == 4, { selectedTab = 4 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("تنظیمات") })
+                NavigationBar(modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp).clip(RoundedCornerShape(25.dp)).border(1.dp, accent.copy(alpha = if (darkMode) .24f else .10f), RoundedCornerShape(25.dp)), containerColor = MaterialTheme.colorScheme.surface, contentColor = Ink, tonalElevation = 0.dp, windowInsets = WindowInsets(0.dp)) {
+                    NavigationBarItem(selectedTab == 0, { selectedTab = 0; calendarVisit++ }, icon = { Icon(Icons.Default.CalendarMonth, null) }, label = { Text("تقویم", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
+                    NavigationBarItem(selectedTab == 1, { selectedTab = 1 }, icon = { Icon(Icons.Default.CompareArrows, null) }, label = { Text("تبدیل تاریخ", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
+                    NavigationBarItem(selectedTab == 2, { selectedTab = 2 }, icon = { Icon(Icons.Default.WbSunny, null) }, label = { Text("اوقات شرعی", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
+                    NavigationBarItem(selectedTab == 3, { selectedTab = 3 }, icon = { Icon(Icons.Default.Build, null) }, label = { Text("امکانات", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
+                    NavigationBarItem(selectedTab == 4, { selectedTab = 4 }, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("تنظیمات", fontWeight = FontWeight.SemiBold) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = accent, selectedTextColor = accent, indicatorColor = accent.copy(alpha = .14f), unselectedIconColor = Muted, unselectedTextColor = Muted))
                 }
             }
         ) { padding ->
@@ -326,14 +326,17 @@ private fun CalendarHome(accent: Color, visitToken: Int) {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text("روزنگار", color = Ink, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
-                Text("تقویم هوشمند فارسی", color = Muted, fontSize = 12.sp)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+                Box(Modifier.size(48.dp).background(Brush.linearGradient(listOf(accent, accent.copy(alpha = .62f))), RoundedCornerShape(17.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(26.dp))
+                }
+                Column {
+                    Text("روزنگار", color = Ink, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-.5).sp)
+                    Text("تقویمِ لحظه‌های زندگی", color = Muted, fontSize = 11.sp)
+                }
             }
-            Box(Modifier.size(48.dp).background(
-                Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.68f))), RoundedCornerShape(16.dp)
-            ), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.CalendarMonth, null, tint = Color.White, modifier = Modifier.size(26.dp))
+            Box(Modifier.clip(CircleShape).background(accent.copy(alpha = .10f)).padding(horizontal = 12.dp, vertical = 9.dp)) {
+                Text("امروز · ${faNumber(todayDay)} ${MonthNames[todayMonth]}", color = accent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -703,34 +706,7 @@ private fun DateConverter(accent: Color) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text("تبدیل تاریخ", color = Ink, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-            Text("یک تاریخ را انتخاب کن؛ معادل دقیق آن را در تقویم دیگر ببین.", color = Muted, fontSize = 12.sp)
-        }
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1D3547)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
-        ) {
-            Box(Modifier.fillMaxWidth().background(
-                Brush.linearGradient(listOf(Color(0xFF1D3547), Color(0xFF31566A), Color(0xFF426D70))),
-                RoundedCornerShape(28.dp)
-            ).padding(20.dp)) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Text("DATE CONVERTER", color = Color.White.copy(alpha = .65f), fontSize = 9.sp, letterSpacing = 2.sp)
-                            Text("از هر تقویم به تقویم دیگر", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Box(Modifier.size(48.dp).background(Color.White.copy(alpha = .13f), CircleShape), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.CompareArrows, null, tint = Color.White, modifier = Modifier.size(26.dp))
-                        }
-                    }
-                    Text("تبدیل سریع، همراه با مناسبت‌های همان روز", color = Color.White.copy(alpha = .78f), fontSize = 11.sp)
-                }
-            }
-        }
+        DaynegarSectionHero("تبدیل تاریخ", "تبدیل دقیق شمسی و میلادی همراه با مناسبت‌های همان روز.", accent)
         Row(
             Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(18.dp)).padding(5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -922,23 +898,26 @@ private val IranianCities = listOf(
 private fun DaynegarSectionHero(title: String, subtitle: String, accent: Color) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF203747)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF172C3B)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
-            Modifier.fillMaxWidth().background(
-                Brush.linearGradient(listOf(Color(0xFF203747), accent.copy(alpha = .82f), Color(0xFF426B70))),
-                RoundedCornerShape(24.dp)
-            ).padding(horizontal = 18.dp, vertical = 20.dp)
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(
+                Brush.linearGradient(listOf(Color(0xFF142A3B), Color(0xFF294B5B), accent.copy(alpha = .92f)))
+            ).padding(horizontal = 19.dp, vertical = 21.dp)
         ) {
+            Box(Modifier.align(Alignment.TopEnd).size(118.dp).offset(x = 28.dp, y = (-42).dp)
+                .background(Brush.radialGradient(listOf(Color.White.copy(alpha = .17f), Color.Transparent)), CircleShape))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(48.dp).background(Color.White.copy(alpha = .14f), RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(25.dp))
+                Box(Modifier.size(54.dp).background(Color.White.copy(alpha = .13f), RoundedCornerShape(18.dp))
+                    .border(1.dp, Color.White.copy(alpha = .18f), RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(27.dp))
                 }
-                Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                    Text(subtitle, color = Color.White.copy(alpha = .78f), fontSize = 11.sp)
+                Column(Modifier.weight(1f).padding(start = 13.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text("DAYNEGAR  /  DAILY COMPANION", color = Color.White.copy(alpha = .62f), fontSize = 8.sp, letterSpacing = 1.5.sp)
+                    Text(title, color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(subtitle, color = Color.White.copy(alpha = .78f), fontSize = 11.sp, lineHeight = 18.sp)
                 }
             }
         }
@@ -1179,7 +1158,7 @@ private fun SettingsPage(
                 Text("درباره روزنگار", color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CalendarMonth, null, tint = accent)
-                    Text("روزنگار · نسخه ۱٫۳٫۰", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text("روزنگار · نسخه ۲٫۰٫۰", Modifier.padding(start = 9.dp), color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
                 Text("تقویم شمسی، مناسبت‌های ایران، تبدیل تاریخ، رویدادها و اوقات شرعی در یک همراه روزانه.", color = Muted, fontSize = 11.sp)
             }
