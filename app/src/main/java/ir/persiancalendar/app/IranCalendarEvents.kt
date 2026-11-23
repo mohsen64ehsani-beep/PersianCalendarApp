@@ -308,19 +308,12 @@ object IranCalendarEvents {
             1405 -> year1405[month to day].orEmpty() + year1405Additional[month to day].orEmpty()
             1406 -> year1406[month to day].orEmpty() + year1406Additional[month to day].orEmpty()
             else -> emptyList()
-        }
+        }.distinctBy { it.title }
 
-    fun forMonth(year: Int, month: Int): List<Pair<Int, IranCalendarOccasion>> {
-        val source = when (year) {
-            1405 -> (year1405.keys + year1405Additional.keys).associateWith { key -> year1405[key].orEmpty() + year1405Additional[key].orEmpty() }
-            1406 -> (year1406.keys + year1406Additional.keys).associateWith { key -> year1406[key].orEmpty() + year1406Additional[key].orEmpty() }
-            else -> emptyMap()
-        }
-        return source.entries
-            .filter { it.key.first == month }
-            .flatMap { entry -> entry.value.map { entry.key.second to it } }
-            .sortedWith(compareBy<Pair<Int, IranCalendarOccasion>> { it.first }.thenBy { it.second.title })
-    }
+    fun forMonth(year: Int, month: Int): List<Pair<Int, IranCalendarOccasion>> =
+        (1..31).flatMap { day ->
+            forDate(year, month, day).map { day to it }
+        }.sortedWith(compareBy<Pair<Int, IranCalendarOccasion>> { it.first }.thenBy { it.second.title })
 
     fun isHoliday(year: Int, month: Int, day: Int): Boolean =
         forDate(year, month, day).any { it.isHoliday }
