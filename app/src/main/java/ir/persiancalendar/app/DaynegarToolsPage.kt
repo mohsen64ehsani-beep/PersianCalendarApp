@@ -6,6 +6,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.icu.util.IslamicCalendar
+import android.icu.util.Calendar
+import android.icu.util.ULocale
 import android.icu.util.TimeZone
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,9 +48,10 @@ private val clockCities = listOf(
 fun DaynegarToolsPage(accent: Color) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("daynegar_tools", Context.MODE_PRIVATE) }
-    var note by remember { mutableStateOf(prefs.getString("daily_note", "") ?: "") }
     var query by remember { mutableStateOf("") }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val todayKey = remember(now) { Calendar.getInstance(TimeZone.getTimeZone("Asia/Tehran"), ULocale("fa_IR@calendar=persian")).apply { timeInMillis = now }.let { "${it.get(Calendar.YEAR)}-${it.get(Calendar.MONTH) + 1}-${it.get(Calendar.DAY_OF_MONTH)}" } }
+    var note by remember(todayKey) { mutableStateOf(prefs.getString("note_$todayKey", "") ?: "") }
     var feedback by remember { mutableStateOf("") }
     var compassAzimuth by remember { mutableFloatStateOf(0f) }
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
@@ -114,7 +117,7 @@ fun DaynegarToolsPage(accent: Color) {
                     editor.apply()
                 }
             }
-            note = context.getSharedPreferences("daynegar_tools", Context.MODE_PRIVATE).getString("daily_note", "") ?: ""
+            note = context.getSharedPreferences("daynegar_tools", Context.MODE_PRIVATE).getString("note_$todayKey", "") ?: ""
             feedback = "بازیابی اطلاعات انجام شد؛ برای اعمال همه تنظیمات، برنامه را یک‌بار بازنشانی کن."
         }.onFailure { feedback = "فایل پشتیبان معتبر نیست: ${it.message}" }
     }
@@ -154,7 +157,7 @@ fun DaynegarToolsPage(accent: Color) {
             Text("امکانات تکمیلی برای برنامه‌ریزی و مدیریت روزها", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
         }
         ToolCard(accent, "یادداشت امروز", "یادداشت کوتاه روزانه؛ به‌صورت خودکار روی گوشی ذخیره می‌شود.", Icons.Default.EditNote) {
-            OutlinedTextField(value = note, onValueChange = { note = it.take(2000); prefs.edit().putString("daily_note", it.take(2000)).apply() },
+            OutlinedTextField(value = note, onValueChange = { note = it.take(2000); prefs.edit().putString("note_$todayKey", it.take(2000)).apply() },
                 modifier = Modifier.fillMaxWidth(), minLines = 3, placeholder = { Text("امروز چه چیزی را می‌خواهی به خاطر بسپاری؟") })
             Text("${note.length} / ۲۰۰۰ نویسه", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
         }
