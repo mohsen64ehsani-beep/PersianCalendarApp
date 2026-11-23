@@ -273,7 +273,7 @@ private fun CalendarHome(accent: Color) {
                 }
                 val weekdayOffset = selectedCalendar.get(Calendar.DAY_OF_WEEK) % 7
                 val weekStart = (selectedCalendar.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, -weekdayOffset) }
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(22.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(22.dp)) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(MonthNames[visibleMonth] + " " + faNumber(visibleYear), color = Ink, fontWeight = FontWeight.Bold)
                         Row(Modifier.fillMaxWidth()) {
@@ -345,7 +345,7 @@ private fun CalendarHome(accent: Color) {
         if (officialEvents.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             Text("مناسبت‌های رسمی", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     officialEvents.forEach { occasion ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -364,7 +364,7 @@ private fun CalendarHome(accent: Color) {
             Text("رویدادها و یادآورها", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             TextButton(onClick = { eventTitle = ""; reminderTime = "09:00"; showAddEvent = true }) { Text("افزودن رویداد", color = accent) }
         }
-        Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
             if (events.isEmpty()) {
                 Text("برای این روز رویدادی ثبت نشده است.", Modifier.padding(16.dp).fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
             } else {
